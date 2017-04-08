@@ -1,0 +1,342 @@
+/*
+ * datalogger.c
+ *
+ *  Created on: 22.10.2016
+ *      Author: Kwarc
+ */
+
+#include <stdio.h>
+#include "datalogger.h"
+#include "DIALOG.h"
+#include "MESSAGEBOX.h"
+
+extern void Error_Handler(void);
+extern uint8_t pga_gain;
+
+const char *fileHeader = "Time,Frequency,Power Factor,Apparent Power,Real Power,Reactive Power,"
+										"U_FFT[0],U_FFT[1],U_FFT[2],U_FFT[3],U_FFT[4],"
+										"U_FFT[5],U_FFT[6],U_FFT[7],U_FFT[8],"
+										"U_FFT[9],U_FFT[10],U_FFT[11],U_FFT[12],"
+										"U_FFT[13],U_FFT[14],U_FFT[15],U_FFT[16],"
+										"I_FFT[0],I_FFT[1],I_FFT[2],I_FFT[3],I_FFT[4],"
+										"I_FFT[5],I_FFT[6],I_FFT[7],I_FFT[8],"
+										"I_FFT[9],I_FFT[10],I_FFT[11],I_FFT[12],"
+										"I_FFT[13],I_FFT[14],I_FFT[15],I_FFT[16]\r\n";
+
+const char *sprintfFormat = "%02d:%02d:%02d,%2.2f,%1.2f,%+4.0f,%+4.0f,%+4.0f,"
+							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
+							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
+							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,"
+							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f\r\n";
+
+void DL_Init(void)
+{
+	/* Initialize variables */
+	DL.disk_connected = false;
+	DL.print_screen = false;
+	DL.interval_div[0]=1;DL.interval_div[1]=60;DL.interval_div[2]=120;DL.interval_div[3]=240;
+	DL.interval_div_idx = 1;
+	DL.save_waveforms = false;
+	DL.log_now = false;
+	rtc_1sTick = 1;
+
+	/* Initialize USB-host & FAT-FS */
+	MX_USB_HOST_Init();
+	MX_FATFS_Init();
+}
+void DL_MountDisk(void)
+{
+	/* Register the file system object to the FatFs module */
+	if(f_mount(&DL.USB_disk, (TCHAR const*)USBH_Path, 1) != FR_OK)
+	{
+	/* FatFs Initialization Error */
+	Error_Handler();
+	}
+}
+
+void DL_UnmountDisk(void)
+{
+	/* Register the file system object to the FatFs module */
+	if(f_mount(NULL, (TCHAR const*)USBH_Path, 1) != FR_OK)
+	{
+	/* FatFs Deinitialization Error */
+	Error_Handler();
+	}
+}
+
+void DL_CreateFile(void)
+{
+	static uint8_t cnt = 0;
+
+	/* Convert actual date to filename string */
+	sprintf(DL.filename, "log-%02d.csv", cnt);
+
+    /* Create and Open a new .csv file object with write access */
+    if(f_open(&DL.file, DL.filename, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+    {
+      /* file open for write Error */
+      Error_Handler();
+    }
+
+	/* Create header file for CSV */
+	f_puts(fileHeader, &DL.file);
+
+	/* Go to the end of file for future writing */
+	f_lseek(&DL.file, f_size(&DL.file));
+
+	cnt++;
+
+
+}
+
+void DL_CloseFile(void)
+{
+    /* Close the opened file */
+    if(f_close(&DL.file) != FR_OK)
+    {
+    	Error_Handler();
+    }
+}
+
+void DL_LogToFile(struct parameters_t *grid)
+{
+
+	/* Reset buffer */
+	memset(DL.data_buffer, 0, sizeof(DL.data_buffer));
+	/* Convert numeric data to string */
+	sprintf(DL.data_buffer, sprintfFormat,rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds,
+										grid->frequency,grid->PF,grid->S,grid->P,grid->Q,
+										U.FFT_out_real[GET_HARMONIC(0)],U.FFT_out_real[GET_HARMONIC(1)],
+										U.FFT_out_real[GET_HARMONIC(2)],U.FFT_out_real[GET_HARMONIC(3)],
+										U.FFT_out_real[GET_HARMONIC(4)],U.FFT_out_real[GET_HARMONIC(5)],
+										U.FFT_out_real[GET_HARMONIC(6)],U.FFT_out_real[GET_HARMONIC(7)],
+										U.FFT_out_real[GET_HARMONIC(8)],U.FFT_out_real[GET_HARMONIC(9)],
+										U.FFT_out_real[GET_HARMONIC(10)],U.FFT_out_real[GET_HARMONIC(11)],
+										U.FFT_out_real[GET_HARMONIC(12)],U.FFT_out_real[GET_HARMONIC(13)],
+										U.FFT_out_real[GET_HARMONIC(14)],U.FFT_out_real[GET_HARMONIC(15)],
+										U.FFT_out_real[GET_HARMONIC(16)],
+										I.FFT_out_real[GET_HARMONIC(0)],I.FFT_out_real[GET_HARMONIC(1)],
+										I.FFT_out_real[GET_HARMONIC(2)],I.FFT_out_real[GET_HARMONIC(3)],
+										I.FFT_out_real[GET_HARMONIC(4)],I.FFT_out_real[GET_HARMONIC(5)],
+										I.FFT_out_real[GET_HARMONIC(6)],I.FFT_out_real[GET_HARMONIC(7)],
+										I.FFT_out_real[GET_HARMONIC(8)],I.FFT_out_real[GET_HARMONIC(9)],
+										I.FFT_out_real[GET_HARMONIC(10)],I.FFT_out_real[GET_HARMONIC(11)],
+										I.FFT_out_real[GET_HARMONIC(12)],I.FFT_out_real[GET_HARMONIC(13)],
+										I.FFT_out_real[GET_HARMONIC(14)],I.FFT_out_real[GET_HARMONIC(15)],
+										I.FFT_out_real[GET_HARMONIC(16)]);
+	/* Save data to file */
+	f_write(&DL.file, DL.data_buffer, sizeof(DL.data_buffer), NULL);
+	if(rtc_1sTick)	f_sync(&DL.file);
+
+}
+
+static void WriteByte2File(uint8_t data, void * file)
+{
+	UINT bWritten;
+	/* Save data to file */
+	f_write(file, &data, 1, &bWritten);
+}
+
+void DL_PrintScreen(void)
+{
+	FIL bmpFile;
+	char filname[13];
+	static uint8_t cnt = 0;
+
+	/* Create filename with counter */
+	sprintf(filname, "screen%02d.bmp", cnt);
+    /* Create and Open a new .bmp file object with write access */
+    if(f_open(&bmpFile, filname, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+    {
+      /* file open for write Error */
+      Error_Handler();
+    }
+
+	GUI_BMP_Serialize(WriteByte2File, &bmpFile);
+
+    /* Close the opened file */
+    if(f_close(&bmpFile) != FR_OK)
+    {
+    	Error_Handler();
+    }
+    MESSAGEBOX_Create(" Screenshot saved!", "Information", GUI_MESSAGEBOX_CF_MODAL);
+    cnt++;
+}
+void DL_SaveWaveforms(void)
+{
+	FIL file;
+	char buffer[16];
+	static uint8_t cnt = 0;
+
+	/* Create filename with counter */
+	sprintf(buffer, "wf%02d.csv", cnt);
+	/* Create and Open a new .bmp file object with write access */
+	if(f_open(&file, buffer, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+	{
+		/* file open for write Error */
+		Error_Handler();
+	}
+
+	/* Create header file for csv */
+	f_puts("Voltage,Current\r\n", &file);
+	/* Go to the end of file for future writing */
+	f_lseek(&file, f_size(&file));
+
+	float32_t* p1 = DSP_GetBufferPointer(voltage);
+	float32_t* p2 = DSP_GetBufferPointer(current);
+
+	for(uint16_t i=0;i<FFT_LENGTH;i++)
+	{
+		sprintf(buffer, "%3.1f,%2.2f\r\n", (p1[i]*PEAK_VOLTAGE_RANGE)/(float32_t)ADC_RESOLUTION,
+										   (p2[i]*PEAK_CURRENT_RANGE)/(float32_t)(ADC_RESOLUTION*pga_gain));
+		f_puts(buffer,&file);
+	}
+
+	/* Close the opened file */
+	if(f_close(&file) != FR_OK)
+	{
+		Error_Handler();
+	}
+    MESSAGEBOX_Create(" Waveforms saved!", "Information", GUI_MESSAGEBOX_CF_MODAL);
+	cnt++;
+
+}
+
+void DL_TestApplication(void)
+{
+	FIL MyFile;                   						/* File object */
+	FRESULT res;                                          /* FatFs function common result code */
+	uint32_t byteswritten, bytesread;                     /* File write/read counts */
+	uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
+	uint8_t rtext[100];                                   /* File read buffer */
+
+
+	/* Create and Open a new text file object with write access */
+	if(f_open(&MyFile, "STM32.TXT", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+	{
+		/* 'STM32.TXT' file Open for write Error */
+		Error_Handler();
+	}
+	else
+	{
+		/* Write data to the text file */
+		res = f_write(&MyFile, wtext, sizeof(wtext), (void *)&byteswritten);
+
+		if((byteswritten == 0) || (res != FR_OK))
+		{
+			/* 'STM32.TXT' file Write or EOF Error */
+			Error_Handler();
+		}
+		else
+		{
+			/* Close the open text file */
+			f_close(&MyFile);
+
+			/* Open the text file object with read access */
+			if(f_open(&MyFile, "STM32.TXT", FA_READ) != FR_OK)
+			{
+				/* 'STM32.TXT' file Open for read Error */
+				Error_Handler();
+			}
+			else
+			{
+				/* Read data from the text file */
+				res = f_read(&MyFile, rtext, sizeof(rtext), (void *)&bytesread);
+
+				if((bytesread == 0) || (res != FR_OK))
+				{
+					/* 'STM32.TXT' file Read or EOF Error */
+					Error_Handler();
+				}
+				else
+				{
+					/* Close the open text file */
+					f_close(&MyFile);
+
+					/* Compare read data with the expected data */
+					if((bytesread != byteswritten))
+					{
+						/* Read data is different from the expected data */
+						Error_Handler();
+					}
+					else
+					{
+						/* Success of the demo: no error occurrence */
+
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+void DL_WriteTimeTest(void)
+{
+	FIL file1, file2;
+	char tiny_buffer[64] = {[0 ... 62] = '0', [63] = '\n'};
+	char large_buffer[512] = {[0 ... 510] = '0', [511] = '\n'};
+
+	timer_onoff = 0;
+	write_time_ms = 0;
+
+
+	/* Create and Open a new text file object with write access */
+	if(f_open(&file1, "tiny.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+	{
+	  /* 'STM32.TXT' file Open for write Error */
+	  Error_Handler();
+	}
+
+	/* Create header file for TXT */
+	f_puts("Time measurement of different databuffer sizes.\n", &file1);
+
+	/* Go to the end of file for future writing */
+	f_lseek(&file1, f_size(&file1));
+
+	/* First, measure time of saving 6400 times tiny_buffer to file */
+	volatile uint32_t tiny_buffer_time = 0;
+	write_time_ms = 0;
+	timer_onoff = 1;
+	for(uint16_t i = 0; i < 64000; i++)
+	{
+		/* Save data to file */
+		f_write(&file1, tiny_buffer, sizeof(tiny_buffer), NULL);
+//		f_sync(&file1);
+	}
+	timer_onoff = 0;
+	tiny_buffer_time = write_time_ms;
+	f_printf(&file1, "Write time(tiny buffer): %dms", tiny_buffer_time);
+	f_close(&file1);
+
+	/* Create and Open a new text file object with write access */
+	if(f_open(&file2, "large.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+	{
+	  /* 'STM32.TXT' file Open for write Error */
+	  Error_Handler();
+	}
+
+	/* Create header file for TXT */
+	f_puts("Time measurement of different databuffer sizes.\n", &file2);
+
+	/* Go to the end of file for future writing */
+	f_lseek(&file2, f_size(&file2));
+
+	/* Next, measure time of saving 64 times tiny_buffer to file */
+	volatile uint32_t large_buffer_time = 0;
+	write_time_ms = 0;
+	timer_onoff = 1;
+	for(uint16_t i = 0; i < 80; i++)
+	{
+		/* Save data to file */
+		f_write(&file2, large_buffer, sizeof(large_buffer), NULL);
+//		f_sync(&file2);
+	}
+	timer_onoff = 0;
+	large_buffer_time = write_time_ms;
+	f_printf(&file2, "Write time(large buffer): %d", large_buffer_time);
+	f_close(&file2);
+
+}
+
