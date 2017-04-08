@@ -290,6 +290,8 @@ void DSP_AverageValues(uint8_t avg_number)
 		accum.DPF += grid.DPF;
 		accum.load_impedance[0] += grid.load_impedance[0];
 		accum.load_impedance[1] += grid.load_impedance[1];
+		accum.THD_voltage += grid.THD_voltage;
+		accum.THD_current += grid.THD_current;
 		counter++;
 	}
 	else
@@ -304,6 +306,8 @@ void DSP_AverageValues(uint8_t avg_number)
 		grid.Q = accum.Q*div;
 		grid.PF = accum.PF*div;
 		grid.DPF = accum.DPF*div;
+		grid.THD_voltage = accum.THD_voltage*div;
+		grid.THD_current = accum.THD_current*div;
 		grid.load_impedance[0] = accum.load_impedance[0]*div;
 		grid.load_impedance[1] = accum.load_impedance[1]*div;
 
@@ -311,6 +315,7 @@ void DSP_AverageValues(uint8_t avg_number)
 		grid.data_averaged = true;
 		accum.S = accum.P = accum.Q = accum.PF = accum.load_impedance[0] = accum.load_impedance[1] = 0;
 		accum.RMS_voltage = accum.RMS_current = accum.frequency = accum.DPF = 0;
+		accum.THD_voltage = accum.THD_current = 0;
 		counter = 0;
 	}
 }

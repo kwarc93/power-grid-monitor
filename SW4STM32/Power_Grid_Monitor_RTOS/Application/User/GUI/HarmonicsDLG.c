@@ -30,17 +30,17 @@
 *
 **********************************************************************
 */
-#define ID_WINDOW_0     (GUI_ID_USER + 0x00)
-#define ID_GRAPH_0     (GUI_ID_USER + 0x01)
-#define ID_CHECKBOX_0     (GUI_ID_USER + 0x05)
-#define ID_CHECKBOX_1     (GUI_ID_USER + 0x06)
-#define ID_DROPDOWN_0     (GUI_ID_USER + 0x07)
-#define ID_DROPDOWN_1     (GUI_ID_USER + 0x08)
-#define ID_TEXT_0     (GUI_ID_USER + 0x09)
-#define ID_TEXT_1     (GUI_ID_USER + 0x0A)
-#define ID_TEXT_2     (GUI_ID_USER + 0x0B)
-#define ID_TEXT_3     (GUI_ID_USER + 0x0E)
-#define ID_TEXT_4     (GUI_ID_USER + 0x0F)
+#define ID_WINDOW_0 (GUI_ID_USER + 0x00)
+#define ID_GRAPH_0 (GUI_ID_USER + 0x01)
+#define ID_DROPDOWN_0 (GUI_ID_USER + 0x04)
+#define ID_DROPDOWN_1 (GUI_ID_USER + 0x05)
+#define ID_TEXT_0 (GUI_ID_USER + 0x06)
+#define ID_TEXT_1 (GUI_ID_USER + 0x07)
+#define ID_TEXT_2 (GUI_ID_USER + 0x08)
+#define ID_TEXT_3 (GUI_ID_USER + 0x09)
+#define ID_TEXT_4 (GUI_ID_USER + 0x0A)
+#define ID_TEXT_5 (GUI_ID_USER + 0x0B)
+#define ID_TEXT_6 (GUI_ID_USER + 0x0C)
 
 
 // USER START (Optionally insert additional defines)
@@ -63,15 +63,15 @@
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
   { WINDOW_CreateIndirect, "Harmonics", ID_WINDOW_0, 0, 0, 222, 270, 0, 0x0, 0 },
   { GRAPH_CreateIndirect, "graph", ID_GRAPH_0, 16, 18, 194, 124, 0, 0x0, 0 },
-  { CHECKBOX_CreateIndirect, "Cb_Uf", ID_CHECKBOX_0, 44, 150, 50, 20, 0, 0x0, 0 },
-  { CHECKBOX_CreateIndirect, "Cb_If", ID_CHECKBOX_1, 136, 150, 50, 20, 0, 0x0, 0 },
   { DROPDOWN_CreateIndirect, "Dd_Uf", ID_DROPDOWN_0, 14, 193, 80, 21, 0, 0x0, 0 },
   { DROPDOWN_CreateIndirect, "Dd_If", ID_DROPDOWN_1, 14, 234, 80, 21, 0, 0x0, 0 },
-  { TEXT_CreateIndirect, "FFT", ID_TEXT_0, 16, 4, 20, 16, 0, 0x0, 0 },
+  { TEXT_CreateIndirect, "FFT", ID_TEXT_0, 14, 4, 20, 16, 0, 0x0, 0 },
   { TEXT_CreateIndirect, "U(f)", ID_TEXT_1, 128, 193, 80, 20, 0, 0x64, 0 },
   { TEXT_CreateIndirect, "I(f)", ID_TEXT_2, 128, 234, 80, 22, 0, 0x64, 0 },
   { TEXT_CreateIndirect, "Harmonic U(f):", ID_TEXT_3, 14, 176, 80, 16, 0, 0x0, 0 },
   { TEXT_CreateIndirect, "Harmonic I(f):", ID_TEXT_4, 14, 218, 80, 20, 0, 0x0, 0 },
+  { TEXT_CreateIndirect, "THD(U):", ID_TEXT_5, 14, 152, 94, 20, 0, 0x0, 0 },
+  { TEXT_CreateIndirect, "THD(I):", ID_TEXT_6, 114, 152, 94, 20, 0, 0x64, 0 },
   // USER START (Optionally insert additional widgets)
   // USER END
 };
@@ -106,20 +106,19 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     GRAPH_SetBorder(hItem, 2, 2, 2, 2);
     hGraph1 = hItem;
     //
-    // Initialization of 'Cb_Uf'
+    // Initialization of 'THD(U):'
     //
-    hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
-    CHECKBOX_SetText(hItem, "U(f)");
-    CHECKBOX_SetState(hItem, WM_ItemFlag.CB3 = 1);
-    hCB_Uf = hItem;
-
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_5);
+    TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+    TEXT_SetFont(hItem, GUI_FONT_13_1);
+    hTextTHD_U = hItem;
     //
-    // Initialization of 'Cb_If'
+    // Initialization of 'THD(I):'
     //
-    hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_1);
-    CHECKBOX_SetText(hItem, "I(f)");
-    CHECKBOX_SetState(hItem, WM_ItemFlag.CB4 = 1);
-    hCB_If = hItem;
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_6);
+    TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+    TEXT_SetFont(hItem, GUI_FONT_13_1);
+    hTextTHD_I = hItem;
     //
     // Initialization of 'Dd_Uf'
     //
@@ -191,52 +190,13 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     TEXT_SetText(hItem, "0.00 A");
     hText_If = hItem;
     // USER START (Optionally insert additional code for further widget initialization)
+	Uf_idx = If_idx = 1;	// Set 50Hz in harmonics dropdown
     // USER END
     break;
   case WM_NOTIFY_PARENT:
     Id    = WM_GetId(pMsg->hWinSrc);
     NCode = pMsg->Data.v;
     switch(Id) {
-    case ID_CHECKBOX_0: // Notifications sent by 'Cb_Uf'
-      switch(NCode) {
-      case WM_NOTIFICATION_CLICKED:
-        // USER START (Optionally insert code for reacting on notification message)
-    	  WM_ItemFlag.CB3 ^= 1;
-    	  if(WM_ItemFlag.CB3 == 0)	GRAPH_DATA_YT_Clear(hData_Uf);
-        // USER END
-        break;
-      case WM_NOTIFICATION_RELEASED:
-        // USER START (Optionally insert code for reacting on notification message)
-        // USER END
-        break;
-      case WM_NOTIFICATION_VALUE_CHANGED:
-        // USER START (Optionally insert code for reacting on notification message)
-        // USER END
-        break;
-      // USER START (Optionally insert additional code for further notification handling)
-      // USER END
-      }
-      break;
-    case ID_CHECKBOX_1: // Notifications sent by 'Cb_If'
-      switch(NCode) {
-      case WM_NOTIFICATION_CLICKED:
-        // USER START (Optionally insert code for reacting on notification message)
-    	  WM_ItemFlag.CB4 ^= 1;
-    	  if(WM_ItemFlag.CB4 == 0)	GRAPH_DATA_YT_Clear(hData_If);
-        // USER END
-        break;
-      case WM_NOTIFICATION_RELEASED:
-        // USER START (Optionally insert code for reacting on notification message)
-        // USER END
-        break;
-      case WM_NOTIFICATION_VALUE_CHANGED:
-        // USER START (Optionally insert code for reacting on notification message)
-        // USER END
-        break;
-      // USER START (Optionally insert additional code for further notification handling)
-      // USER END
-      }
-      break;
     case ID_DROPDOWN_0: // Notifications sent by 'Dd_Uf'
       switch(NCode) {
       case WM_NOTIFICATION_CLICKED:

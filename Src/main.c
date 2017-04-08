@@ -56,11 +56,6 @@
 #include "gpio.h"
 #include "fmc.h"
 
-#include "emwin_functions.h"
-#include "datalogger.h"
-#include "dsp_calculations.h"
-
-
 /* Private variables ---------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
@@ -180,17 +175,6 @@ void SetupHardware(void)
 	MX_TIM2_Init();
 	MX_TIM3_Init();
 	MX_RTC_Init();
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if(GPIO_Pin == B1_Pin)
-	{
-		if(DL.disk_connected)
-		{
-			DL.print_screen = true;
-		}
-	}
 }
 
 

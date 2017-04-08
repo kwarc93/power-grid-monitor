@@ -96,7 +96,7 @@ void DSP_Thread(void const *argument)
 		{
 			HAL_GPIO_WritePin(GPIOG,LD4_Pin,GPIO_PIN_SET);
 
-			if(WM_ItemFlag.CB0 == 1)
+			if(WM_ItemFlag.CB_FIR)
 			{
 				DSP_FIRFilter();
 			}
@@ -123,7 +123,7 @@ void DSP_Thread(void const *argument)
 			/* ----------------------------------------------------------------------
 			 ** Log calculated parameters
 			 ** ------------------------------------------------------------------- */
-			if(DL.log_now && grid.data_averaged && WM_ItemFlag.CB1)
+			if(DL.log_now && grid.data_averaged && WM_ItemFlag.CB_LOG)
 			{
 				DL.log_now = false;
 				osThreadResume(DLThreadHandle);
@@ -157,6 +157,7 @@ void GUI_Thread(void const *argument)
 	(void) argument;
 
 	uint16_t i;
+	char *format;
 	char string[32];
 	uint32_t lastTick;
 
@@ -208,6 +209,11 @@ void GUI_Thread(void const *argument)
 				WM_Paint(hGraph1);
 				if(grid.data_averaged)
 				{
+					sprintf(string, "THD(U): %2.1f%%", grid.THD_voltage);
+					TEXT_SetText(hTextTHD_U, string);
+					sprintf(string, "THD(I): %2.1f%%", grid.THD_current);
+					TEXT_SetText(hTextTHD_I, string);
+
 					sprintf(string, "%3.1f V", U.FFT_out_real[GET_HARMONIC(Uf_idx)]);
 					TEXT_SetText(hText_Uf, string);
 					sprintf(string, "%2.2f A", I.FFT_out_real[GET_HARMONIC(If_idx)]);
@@ -235,7 +241,14 @@ void GUI_Thread(void const *argument)
 				TEXT_SetText(hText_PF, string);
 				sprintf(string, "DPF: %.2f", grid.DPF);
 				TEXT_SetText(hText_DPF, string);
-				sprintf(string, "ZL: %.1f%+.1fj Ohm", grid.load_impedance[0], grid.load_impedance[1]);
+
+				/* Hide trailing zero depending on impedance values */
+				format = "ZL: %.1f%+.1fj Ohm";
+				if((grid.load_impedance[0] >= 100.0f) || (grid.load_impedance[1] >= 100.0f))
+				{
+					format = "ZL: %.0f%+.0fj Ohm";
+				}
+				sprintf(string, format, grid.load_impedance[0], grid.load_impedance[1]);
 				TEXT_SetText(hText_ZL, string);
 
 			}

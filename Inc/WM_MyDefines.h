@@ -13,17 +13,17 @@
 
 struct {
 	/* Checkboxes states */
-	uint8_t CB0, CB1, CB2, CB3, CB4;
+	uint8_t CB_FIR, CB_LOG, CB_WIN;
 	/* Multipage page */
 	uint8_t MP;
 } WM_ItemFlag;
 
 WM_HWIN hMpage;
-WM_HWIN hCB0, hCB1, hCB2,hCB_Uf, hCB_If;
+WM_HWIN hCB_FIR, hCB_LOG, hCB_WIN;
 WM_HWIN hB1;
 WM_HWIN hMW, hMP0, hMP1, hMP2, hMP3;
 WM_HWIN hText_URMS, hText_IRMS, hText_Freq, hText_PF, hText_DPF, hText_P, hText_Q, hText_S, hText_ZL;
-WM_HWIN hText_Time, hText_Date, hText_Uf, hText_If, hText12;
+WM_HWIN hText_Time, hText_Date, hText_Uf, hText_If, hText12, hTextTHD_U, hTextTHD_I;
 WM_HWIN hGraph0, hGraph1;
 WM_HWIN hDd1, hDd2, hDd_Uf, hDd_If;
 WM_HWIN hDateTime;

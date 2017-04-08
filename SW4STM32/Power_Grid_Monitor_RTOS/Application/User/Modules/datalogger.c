@@ -29,6 +29,13 @@ const char *sprintfFormat = "%02d:%02d:%02d,%2.2f,%1.2f,%+4.0f,%+4.0f,%+4.0f,"
 							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,"
 							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f\r\n";
 
+static void WriteByte2File(uint8_t data, void * file)
+{
+	UINT bWritten;
+	/* Save data to file */
+	f_write(file, &data, 1, &bWritten);
+}
+
 void DL_Init(void)
 {
 	/* Initialize variables */
@@ -130,13 +137,6 @@ void DL_LogToFile(struct parameters_t *grid)
 
 }
 
-static void WriteByte2File(uint8_t data, void * file)
-{
-	UINT bWritten;
-	/* Save data to file */
-	f_write(file, &data, 1, &bWritten);
-}
-
 void DL_PrintScreen(void)
 {
 	FIL bmpFile;
@@ -162,6 +162,7 @@ void DL_PrintScreen(void)
     MESSAGEBOX_Create(" Screenshot saved!", "Information", GUI_MESSAGEBOX_CF_MODAL);
     cnt++;
 }
+
 void DL_SaveWaveforms(void)
 {
 	FIL file;
@@ -200,6 +201,17 @@ void DL_SaveWaveforms(void)
     MESSAGEBOX_Create(" Waveforms saved!", "Information", GUI_MESSAGEBOX_CF_MODAL);
 	cnt++;
 
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == B1_Pin)
+	{
+		if(DL.disk_connected)
+		{
+			DL.print_screen = true;
+		}
+	}
 }
 
 void DL_TestApplication(void)
@@ -269,74 +281,3 @@ void DL_TestApplication(void)
 		}
 	}
 }
-
-
-
-void DL_WriteTimeTest(void)
-{
-	FIL file1, file2;
-	char tiny_buffer[64] = {[0 ... 62] = '0', [63] = '\n'};
-	char large_buffer[512] = {[0 ... 510] = '0', [511] = '\n'};
-
-	timer_onoff = 0;
-	write_time_ms = 0;
-
-
-	/* Create and Open a new text file object with write access */
-	if(f_open(&file1, "tiny.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
-	{
-	  /* 'STM32.TXT' file Open for write Error */
-	  Error_Handler();
-	}
-
-	/* Create header file for TXT */
-	f_puts("Time measurement of different databuffer sizes.\n", &file1);
-
-	/* Go to the end of file for future writing */
-	f_lseek(&file1, f_size(&file1));
-
-	/* First, measure time of saving 6400 times tiny_buffer to file */
-	volatile uint32_t tiny_buffer_time = 0;
-	write_time_ms = 0;
-	timer_onoff = 1;
-	for(uint16_t i = 0; i < 64000; i++)
-	{
-		/* Save data to file */
-		f_write(&file1, tiny_buffer, sizeof(tiny_buffer), NULL);
-//		f_sync(&file1);
-	}
-	timer_onoff = 0;
-	tiny_buffer_time = write_time_ms;
-	f_printf(&file1, "Write time(tiny buffer): %dms", tiny_buffer_time);
-	f_close(&file1);
-
-	/* Create and Open a new text file object with write access */
-	if(f_open(&file2, "large.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
-	{
-	  /* 'STM32.TXT' file Open for write Error */
-	  Error_Handler();
-	}
-
-	/* Create header file for TXT */
-	f_puts("Time measurement of different databuffer sizes.\n", &file2);
-
-	/* Go to the end of file for future writing */
-	f_lseek(&file2, f_size(&file2));
-
-	/* Next, measure time of saving 64 times tiny_buffer to file */
-	volatile uint32_t large_buffer_time = 0;
-	write_time_ms = 0;
-	timer_onoff = 1;
-	for(uint16_t i = 0; i < 80; i++)
-	{
-		/* Save data to file */
-		f_write(&file2, large_buffer, sizeof(large_buffer), NULL);
-//		f_sync(&file2);
-	}
-	timer_onoff = 0;
-	large_buffer_time = write_time_ms;
-	f_printf(&file2, "Write time(large buffer): %d", large_buffer_time);
-	f_close(&file2);
-
-}
-

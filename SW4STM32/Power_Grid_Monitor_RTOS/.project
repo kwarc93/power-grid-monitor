@@ -31,16 +31,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/startup_stm32f429xx.s</locationURI>
 		</link>
 		<link>
-			<name>Application/User/dma2d.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/Src/dma2d.c</locationURI>
-		</link>
-		<link>
-			<name>Application/User/ltdc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/Src/ltdc.c</locationURI>
-		</link>
-		<link>
 			<name>Application/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/main.c</locationURI>

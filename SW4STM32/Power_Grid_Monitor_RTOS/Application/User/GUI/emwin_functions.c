@@ -11,7 +11,7 @@ GUI_BITMAP bmagh_r;
 
 static void _UserDrawGraph(WM_HWIN hWin, int Stage)
 {
-	int16_t y_value, x_value;
+	int16_t y_value_U, y_value_I, x_value;
 	float32_t* pU = DSP_GetBufferPointer(voltageFFT);
 	float32_t* pI = DSP_GetBufferPointer(currentFFT);
 
@@ -20,30 +20,20 @@ static void _UserDrawGraph(WM_HWIN hWin, int Stage)
 		break;
 	case GRAPH_DRAW_AFTER_BORDER:
 
-		/* Draw Voltage FFT */
-		if(WM_ItemFlag.CB3 == 1)
+		for(uint16_t idx = 0; idx < FFT_LENGTH/4 + RFFT_50HZ_BIN; idx+=RFFT_50HZ_BIN)
 		{
-			GUI_SetColor(GUI_LIGHTCYAN);
-			for(uint16_t idx = 0; idx < FFT_LENGTH/4 + RFFT_50HZ_BIN; idx+=RFFT_50HZ_BIN)
-			{
-				x_value = 4*idx;
-				y_value = 98 - (int16_t)pU[idx]/3U;
-				GUI_DrawVLine(x_value + 33,y_value,98);
-				GUI_DrawVLine(x_value + 34,y_value,98);
-			}
-		}
-		/* Draw Current FFT */
-		if(WM_ItemFlag.CB4 == 1)
-		{
-			GUI_SetColor(GUI_YELLOW);
-			for(uint16_t idx = 0; idx < FFT_LENGTH/4 + RFFT_50HZ_BIN; idx+=RFFT_50HZ_BIN)
-			{
-				x_value = 4*idx;
-				y_value = (int16_t)(98 - 3.75f*pga_gain*pI[idx]);
-				GUI_DrawVLine(x_value + 35,y_value,98);
-				GUI_DrawVLine(x_value + 36,y_value,98);
+			x_value = 4*idx;
 
-			}
+			/* Draw Voltage FFT */
+			GUI_SetColor(GUI_LIGHTCYAN);
+			y_value_U = 98 - (int16_t)pU[idx]/3U;
+			GUI_DrawVLine(x_value + 33,y_value_U,98);
+			GUI_DrawVLine(x_value + 34,y_value_U,98);
+			/* Draw Current FFT */
+			GUI_SetColor(GUI_YELLOW);
+			y_value_I = (int16_t)(98 - 3.75f*pga_gain*pI[idx]);
+			GUI_DrawVLine(x_value + 35,y_value_I,98);
+			GUI_DrawVLine(x_value + 36,y_value_I,98);
 		}
 
 		break;
@@ -162,9 +152,9 @@ void EMWIN_Init(void)
 /* ------------------------------------------------------------------------------------------------------- */
 
 	FRAMEWIN_SetText(hMW, "Power Grid Monitor");
-	Uf_idx = If_idx = 1;	// Set 50Hz in harmonics dropdown
+
 	active_graph = 0;
-	HAL_Delay(1000);		// Delay 1s for init screen
+	HAL_Delay(1000);		// Delay 1s to show init screen
 	MULTIPAGE_SelectPage(hMpage, page = 0);
 
 }

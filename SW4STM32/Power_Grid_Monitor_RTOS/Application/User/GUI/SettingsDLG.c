@@ -108,14 +108,14 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 		// Initialization of 'Filter'
 		//
 		hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
-		hCB0 = hItem;
-		CHECKBOX_SetText(hItem, "FIR lowpass filter (800Hz)");
+		hCB_FIR = hItem;
+		CHECKBOX_SetText(hItem, "FIR lowpass filter");
 		CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
 	    //
 	    // Initialization of 'window'
 	    //
 	    hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_2);
-	    hCB2 = hItem;
+	    hCB_WIN = hItem;
 	    CHECKBOX_SetText(hItem, "Hanning window");
 	    CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
 		//
@@ -134,7 +134,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 		// Initialization of 'Logger'
 		//
 		hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_1);
-		hCB1 = hItem;
+		hCB_LOG = hItem;
 		CHECKBOX_SetText(hItem, "Data logger");
 		CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
 	    //
@@ -188,10 +188,10 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 	    hB1 = hItem;
 	    BUTTON_SetFont(hItem, GUI_FONT_13_1);
 		// USER START (Optionally insert additional code for further widget initialization)
-		CHECKBOX_SetState(hCB0,WM_ItemFlag.CB0 = 1);
-		CHECKBOX_SetState(hCB1,WM_ItemFlag.CB1 = 0);
-		CHECKBOX_SetState(hCB2,WM_ItemFlag.CB2 = 1);
-		DSP_apply_window = WM_ItemFlag.CB2;
+		CHECKBOX_SetState(hCB_FIR,WM_ItemFlag.CB_FIR = 1);
+		CHECKBOX_SetState(hCB_LOG,WM_ItemFlag.CB_LOG = 0);
+		CHECKBOX_SetState(hCB_WIN,WM_ItemFlag.CB_WIN = 1);
+		DSP_apply_window = WM_ItemFlag.CB_WIN;
 		// USER END
 		break;
 	case WM_NOTIFY_PARENT:
@@ -202,7 +202,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 			switch(NCode) {
 			case WM_NOTIFICATION_CLICKED:
 				// USER START (Optionally insert code for reacting on notification message)
-				WM_ItemFlag.CB0 ^= 1;
+				WM_ItemFlag.CB_FIR ^= 1;
 				// USER END
 				break;
 			case WM_NOTIFICATION_RELEASED:
@@ -221,8 +221,8 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 		      switch(NCode) {
 		      case WM_NOTIFICATION_CLICKED:
 		        // USER START (Optionally insert code for reacting on notification message)
-		    	  WM_ItemFlag.CB2 ^= 1;
-		    	  DSP_apply_window = WM_ItemFlag.CB2;
+		    	  WM_ItemFlag.CB_WIN ^= 1;
+		    	  DSP_apply_window = WM_ItemFlag.CB_WIN;
 		        // USER END
 		        break;
 		      case WM_NOTIFICATION_RELEASED:
@@ -264,9 +264,9 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 						// USER START (Optionally insert code for reacting on notification message)
 						if(DL.disk_connected)
 						{
-							if(WM_ItemFlag.CB1)
+							if(WM_ItemFlag.CB_LOG)
 							{
-								WM_ItemFlag.CB1 = 0;
+								WM_ItemFlag.CB_LOG = 0;
 								WM_EnableWindow(hDd2);
 								DL_CloseFile();
 							}
@@ -274,12 +274,12 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 							{
 								DL_CreateFile();
 								WM_DisableWindow(hDd2);
-								WM_ItemFlag.CB1 = 1;
+								WM_ItemFlag.CB_LOG = 1;
 							}
 						}
 						else
 						{
-							CHECKBOX_SetState(hCB1,0);
+							CHECKBOX_SetState(hCB_LOG,0);
 						}
 						// USER END
 						break;

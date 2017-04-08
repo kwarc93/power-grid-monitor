@@ -42,6 +42,7 @@
   */
 
 #include "fatfs.h"
+#include "rtc.h"
 
 uint8_t retUSBH;    /* Return value for USBH */
 char USBH_Path[4];  /* USBH logical drive path */
@@ -67,9 +68,17 @@ void MX_FATFS_Init(void)
   */
 DWORD get_fattime(void)
 {
-  /* USER CODE BEGIN get_fattime */
-  return 0;
-  /* USER CODE END get_fattime */  
+	/* USER CODE BEGIN get_fattime */
+
+	/* Pack date and time into a DWORD variable */
+	return	((DWORD)(rtc_date.Year + 2000 - 1980) << 25)
+			|((DWORD)rtc_date.Month << 21)
+			|((DWORD)rtc_date.Date << 16)
+			|((DWORD)rtc_time.Hours << 11)
+			|((DWORD)rtc_time.Minutes << 5)
+			|((DWORD)rtc_time.Seconds << 1);
+
+	/* USER CODE END get_fattime */
 }
 
 /* USER CODE BEGIN Application */
