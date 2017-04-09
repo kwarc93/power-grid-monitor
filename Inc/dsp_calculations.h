@@ -51,6 +51,8 @@
 uint32_t ADC_Buffer[ADC_BUFFER_LENGTH];
 uint32_t* ready_buffer;
 _Bool DSP_apply_window;
+enum DSP_BufferToDisplay {voltage, current, voltageFFT, currentFFT};
+typedef enum {ind_load = 1, cap_load, ind_generator, cap_generator} eLoadCharacter;
 
 /* --------------------------------------------------------------------------
 ** FIR Coefficients buffer generated using fir1() MATLAB function.
@@ -109,12 +111,11 @@ struct parameters_t
 	float32_t THD_voltage,THD_current;
 	float32_t S,P,Q;
 	float32_t PF, DPF;
+	eLoadCharacter load_type;
 	_Bool data_averaged;
 }grid;
 
 struct DSP_t U,I;
-
-enum DSP_BufferToDisplay {voltage, current, voltageFFT, currentFFT};
 
 void DSP_Init(void);
 _Bool DSP_AutoselectBuffers(void);
@@ -122,9 +123,11 @@ float32_t* DSP_GetBufferPointer(enum DSP_BufferToDisplay type);
 void DSP_FIRFilter(void);
 void DSP_CalcRMS(void);
 void DSP_CalcFrequency(void);
+inline void DSP_ADCPLL(void);
 void DSP_CalcFFT(void);
 void DSP_CalcTHD(void);
-void DSP_CalcImpedance(void);
+void DSP_CalcLoadImpedance(void);
+void DSP_GetLoadCharacter(void);
 void DSP_CalcDPF(void);
 void DSP_CalcPower(void);
 void DSP_CalcPF(void);

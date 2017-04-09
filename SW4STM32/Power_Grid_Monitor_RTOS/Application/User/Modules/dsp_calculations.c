@@ -18,18 +18,6 @@ static uint32_t blockSize = BLOCK_SIZE;
 static uint32_t numBlocks = FFT_LENGTH/BLOCK_SIZE;
 
 
-static uint16_t mov_avg(uint16_t _new_val, uint8_t _filter_pow)
-{
-static uint16_t filt_val;
-static uint32_t sum;
-
-sum = sum - filt_val + _new_val;
-//filt_val = (sum >> _filter_pow);
-filt_val = (sum +(1<<(_filter_pow - 1))) >> _filter_pow;
-return filt_val;
-}
-
-
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	// When DMA(ADC1 & ADC2) completes first-half transfer to ADC buffer:
@@ -64,7 +52,7 @@ void DSP_Init(void)
 	HAL_ADC_Start_IT(&hadc2);
 
 	PGA_SetGain(x1);
-	grid.data_averaged = true;
+	grid.data_averaged = false;
 }
 
 /* ----------------------------------------------------------------------
@@ -78,6 +66,8 @@ _Bool DSP_AutoselectBuffers(void)
 	/* Signal buffer selecting */
 	if(DMA_Half_Ready || DMA_Full_Ready)
 	{
+		DSP_ADCPLL();
+
 		if(DMA_Half_Ready)
 		{
 			ready_buffer = &ADC_Buffer[0];
@@ -156,10 +146,22 @@ void DSP_CalcRMS(void)
  ** ------------------------------------------------------------------- */
 void DSP_CalcFrequency(void)
 {
-	uint16_t signal_period;
+	uint32_t signal_period;
 
-	signal_period = (uint16_t)__HAL_TIM_GET_COMPARE(&htim3,TIM_CHANNEL_1);
+	signal_period = __HAL_TIM_GET_COMPARE(&htim3,TIM_CHANNEL_1);
 	grid.frequency = (float32_t)((2000000.0F)/signal_period);
+
+}
+/* ----------------------------------------------------------------------
+ ** Correct ADC triggering depending on measured frequency
+ ** ------------------------------------------------------------------- */
+inline void DSP_ADCPLL(void)
+{
+	if(grid.data_averaged == true)
+	{
+		/* Set new value of TIM2 ARR period for correct timing of ADC triggering */
+		htim2.Instance->ARR = (uint32_t)(grid.frequency*11.73f) - 1;
+	}
 }
 
 /* -----------------------------------------------------------------------
@@ -220,22 +222,7 @@ void DSP_CalcTHD(void)
 	arm_sqrt_f32(I_sumTHD, &result);
 	grid.THD_current = (float32_t)(100*result)/I.FFT_out_real[RFFT_50HZ_BIN];
 }
-/* ----------------------------------------------------------------------
- ** Calculate impedances: 	impedance_I - customer side
- ** 						impedance_II - utility side
- ** WRANING - Function must be called after DSP_CalcRMS() & DSP_CalcFFT() !
- ** ------------------------------------------------------------------- */
-void DSP_CalcImpedance(void)
-{
-	float32_t res;
-	/* Load impedance from RMS values*/
-	if(grid.RMS_current > 0.0)
-	{
-		res =  grid.RMS_voltage/grid.RMS_current;
-		grid.load_impedance[0] = res*grid.PF;						// Real
-		grid.load_impedance[1] = arm_sin_f32(acosf(grid.PF))*res;	// Imaginary
-	}
-}
+
 /* ----------------------------------------------------------------------
  ** Calculate apparent, active and reactive power
  ** WRANING - Function must be called after DSP_CalcRMS() & DSP_CalcFFT() !
@@ -269,6 +256,34 @@ void DSP_CalcPF(void)
 {
 	grid.PF = grid.P/grid.S;
 	if(grid.PF > 1.0f) grid.PF = 1.0f;
+}
+/* ----------------------------------------------------------------------
+ ** Calculate load impedance
+ ** WRANING - Function must be called after DSP_CalcPower() & DSP_CalcPF() !
+ ** ------------------------------------------------------------------- */
+void DSP_CalcLoadImpedance(void)
+{
+	float32_t res;
+	/* Load impedance from RMS values*/
+	if(grid.RMS_current > 0.0)
+	{
+		res =  grid.RMS_voltage/grid.RMS_current;
+		// Real part
+		grid.load_impedance[0] = res*grid.PF;
+		// Imaginary part
+		grid.load_impedance[1] = ((grid.Q > 0.0f) ? 1.0f : -1.0f)*arm_sin_f32(acosf(grid.PF))*res;
+	}
+}
+/* ----------------------------------------------------------------------
+ ** Get load type (inductive/capacitive load/generator)
+ ** WRANING - Function must be called after DSP_CalcPower() & DSP_CalcPF() !
+ ** ------------------------------------------------------------------- */
+void DSP_GetLoadCharacter(void)
+{
+	if(grid.P >= 0.0f && grid.Q >= 0.0f)		{grid.load_type = ind_load;}
+	else if(grid.P < 0.0f && grid.Q >= 0.0f)	{grid.load_type =  ind_generator;}
+	else if(grid.P < 0.0f && grid.Q < 0.0f)		{grid.load_type =  cap_generator;}
+	else if(grid.P >= 0.0f && grid.Q < 0.0f)	{grid.load_type =  cap_load;}
 }
 /* ----------------------------------------------------------------------
  ** Average all parameters in grid structure

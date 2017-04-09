@@ -115,7 +115,8 @@ void DSP_Thread(void const *argument)
 				DSP_CalcPower();
 				DSP_CalcPF();
 				DSP_CalcDPF();
-				DSP_CalcImpedance();
+				DSP_CalcLoadImpedance();
+				DSP_GetLoadCharacter();
 				DSP_AverageValues(5);
 
 				/* ----------------------------------------------------------------------
@@ -159,7 +160,6 @@ void GUI_Thread(void const *argument)
 
 	uint8_t active_graph = 0;
 	uint16_t i;
-	char *format;
 	char string[32];
 
 	for(;;)
@@ -230,6 +230,7 @@ void GUI_Thread(void const *argument)
 			 ** ------------------------------------------------------------------- */
 			if(page == 0 && grid.data_averaged)
 			{
+
 				sprintf(string, "%3.1f V", grid.RMS_voltage);
 				TEXT_SetText(hText_URMS, string);
 				sprintf(string, "%2.2f A", grid.RMS_current);
@@ -247,14 +248,22 @@ void GUI_Thread(void const *argument)
 				sprintf(string, "DPF: %.2f", grid.DPF);
 				TEXT_SetText(hText_DPF, string);
 
-				/* Hide trailing zero depending on impedance values */
-				format = "ZL: %.1f%+.1fj Ohm";
-				if((grid.load_impedance[0] >= 100.0f) || (grid.load_impedance[1] >= 100.0f))
+				/* Display load character */
+				switch(grid.load_type)
 				{
-					format = "ZL: %.0f%+.0fj Ohm";
+				case ind_load:
+					TEXT_SetText(hText_ZL,"Load: inductive (-)");
+					break;
+				case ind_generator:
+					TEXT_SetText(hText_ZL,"Load: inductive (+)");
+					break;
+				case cap_generator:
+					TEXT_SetText(hText_ZL,"Load: capacitive (+)");
+					break;
+				case cap_load:
+					TEXT_SetText(hText_ZL,"Load: capacitive (-)");
+					break;
 				}
-				sprintf(string, format, grid.load_impedance[0], grid.load_impedance[1]);
-				TEXT_SetText(hText_ZL, string);
 
 			}
 

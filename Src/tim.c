@@ -84,6 +84,8 @@ void MX_TIM2_Init(void)
     Error_Handler();
   }
 
+  SET_BIT(htim2.Instance->CR1,TIM_CR1_ARPE); // set autopreload dla TIM2
+
 }
 /* TIM3 init function */
 void MX_TIM3_Init(void)
