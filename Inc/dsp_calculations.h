@@ -42,7 +42,7 @@
 #define GET_ADC1_RESULT(x)	((uint16_t) ((uint32_t)(x) & 0x0000FFFFUL))
 #define GET_HARMONIC(k)		(RFFT_50HZ_BIN*(uint8_t)(k))
 #define RMS_VOLTAGE_RANGE	((float32_t)(260.0f * 1.024f))	// [U RMS] * calibr. coeff.
-#define RMS_CURRENT_RANGE	((float32_t)(20.0f * 1.06555f))	// [I RMS] * calibr. coeff.
+#define RMS_CURRENT_RANGE	((float32_t)(20.0f * 1.1099479f))	// [I RMS] * calibr. coeff.
 #define PEAK_VOLTAGE_RANGE	((float32_t)(2.0f*RMS_VOLTAGE_RANGE*SQRT2))	// [U PEAK]
 #define PEAK_CURRENT_RANGE	((float32_t)(2.0f*RMS_CURRENT_RANGE*SQRT2))	// [I PEAK]
 

@@ -55,9 +55,14 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 void MX_FREERTOS_Init(void) {
 
-	/* Create binary semaphore for Print Screen thread */
-	osSemaphoreDef(DLPS_Event);
-	DL_Semaphore = osSemaphoreCreate(osSemaphore(DLPS_Event), 1U);
+	/* Create binary semaphore for DSP thread */
+	osSemaphoreDef(DSP_Event);
+	DSP_Semaphore = osSemaphoreCreate(osSemaphore(DSP_Event), 1U);
+	osSemaphoreWait(DSP_Semaphore, 0U);
+
+	/* Create binary semaphore for DL thread */
+	osSemaphoreDef(DL_Event);
+	DL_Semaphore = osSemaphoreCreate(osSemaphore(DL_Event), 1U);
 	osSemaphoreWait(DL_Semaphore, 0U);
 
 	/* Create binary semaphore for GUI thread */

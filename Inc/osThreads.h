@@ -10,6 +10,10 @@
 
 #include "cmsis_os.h"
 
+#define DSP_SIGNAL	(int32_t)(1)
+#define GUI_SIGNAL	(int32_t)(2)
+#define DL_SIGNAL	(int32_t)(3)
+
 osThreadId LED1ThreadHandle, LED2ThreadHandle;
 osThreadId DEFThreadHandle, DSPThreadHandle, GUIThreadHandle, DLThreadHandle;
 osSemaphoreId DSP_Semaphore, DL_Semaphore, GUI_Semaphore;

@@ -8,6 +8,7 @@
 #include "dsp_calculations.h"
 #include "pga.h"
 #include "cmsis_os.h"
+#include "osThreads.h"
 #include <stdbool.h>
 
 static volatile uint8_t DMA_Half_Ready = 0;
@@ -33,12 +34,14 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	// When DMA(ADC1 & ADC2) completes first-half transfer to ADC buffer:
 	DMA_Half_Ready = 1;
+	osSemaphoreRelease(DSP_Semaphore);
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	// When DMA(ADC1 & ADC2) completes second-half transfer to ADC buffer:
 	DMA_Full_Ready = 1;
+	osSemaphoreRelease(DSP_Semaphore);
 }
 
 void DSP_Init(void)

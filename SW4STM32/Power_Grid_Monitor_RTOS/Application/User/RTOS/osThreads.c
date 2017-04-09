@@ -86,53 +86,52 @@ void DSP_Thread(void const *argument)
 {
 	(void) argument;
 
-	uint32_t lastTick;
-
-	lastTick = osKernelSysTick();
-
 	for(;;)
 	{
-		if(DSP_AutoselectBuffers() == true)	// If buffers are ready to calculations
+		if(osSemaphoreWait(DSP_Semaphore, portMAX_DELAY) == osOK)
 		{
-			HAL_GPIO_WritePin(GPIOG,LD4_Pin,GPIO_PIN_SET);
-
-			if(WM_ItemFlag.CB_FIR)
+			if(DSP_AutoselectBuffers() == true)	// If buffers are ready to calculations
 			{
-				DSP_FIRFilter();
+				HAL_GPIO_WritePin(GPIOG,LD4_Pin,GPIO_PIN_SET);
+
+				if(WM_ItemFlag.CB_FIR)
+				{
+					DSP_FIRFilter();
+				}
+
+				arm_copy_f32(U.DSP_buffer, U.GRAPH_buffer, FFT_LENGTH);
+				arm_copy_f32(I.DSP_buffer, I.GRAPH_buffer, FFT_LENGTH);
+
+				if(DL.save_waveforms)
+				{
+					DL.save_waveforms = false;
+					DL_SaveWaveforms();
+				}
+
+				DSP_CalcRMS();
+				DSP_CalcFrequency();
+				DSP_CalcFFT();
+				DSP_CalcTHD();
+				DSP_CalcPower();
+				DSP_CalcPF();
+				DSP_CalcDPF();
+				DSP_CalcImpedance();
+				DSP_AverageValues(5);
+
+				/* ----------------------------------------------------------------------
+				 ** Log calculated parameters
+				 ** ------------------------------------------------------------------- */
+				if(DL.log_now && grid.data_averaged && WM_ItemFlag.CB_LOG)
+				{
+					DL.log_now = false;
+					osSemaphoreRelease(DL_Semaphore);
+				}
+
+				osSemaphoreRelease(GUI_Semaphore);
+				HAL_GPIO_WritePin(GPIOG,LD4_Pin,GPIO_PIN_RESET);
 			}
-
-			arm_copy_f32(U.DSP_buffer, U.GRAPH_buffer, FFT_LENGTH);
-			arm_copy_f32(I.DSP_buffer, I.GRAPH_buffer, FFT_LENGTH);
-
-			if(DL.save_waveforms)
-			{
-				DL.save_waveforms = false;
-				DL_SaveWaveforms();
-			}
-
-			DSP_CalcRMS();
-			DSP_CalcFrequency();
-			DSP_CalcFFT();
-			DSP_CalcTHD();
-			DSP_CalcPower();
-			DSP_CalcPF();
-			DSP_CalcDPF();
-			DSP_CalcImpedance();
-			DSP_AverageValues(5);
-
-			/* ----------------------------------------------------------------------
-			 ** Log calculated parameters
-			 ** ------------------------------------------------------------------- */
-			if(DL.log_now && grid.data_averaged && WM_ItemFlag.CB_LOG)
-			{
-				DL.log_now = false;
-				osThreadResume(DLThreadHandle);
-			}
-			osSemaphoreRelease(GUI_Semaphore);
-			HAL_GPIO_WritePin(GPIOG,LD4_Pin,GPIO_PIN_RESET);
 		}
 
-		osDelayUntil(&lastTick, 10);
 	}
 	/* Should never go here */
 	osThreadTerminate(DSPThreadHandle);
@@ -145,8 +144,10 @@ void DL_Thread(void const *argument)
 
 	for(;;)
 	{
-		DL_LogToFile(&grid);
-		osThreadSuspend(DLThreadHandle);
+		if(osSemaphoreWait(DL_Semaphore, portMAX_DELAY) == osOK)
+		{
+			DL_LogToFile(&grid);
+		}
 	}
 	/* Should never go here */
 	osThreadTerminate(DLThreadHandle);
@@ -156,48 +157,52 @@ void GUI_Thread(void const *argument)
 {
 	(void) argument;
 
+	uint8_t active_graph = 0;
 	uint16_t i;
 	char *format;
 	char string[32];
-	uint32_t lastTick;
-
-	lastTick = osKernelSysTick();
 
 	for(;;)
 	{
 		if(osSemaphoreWait(GUI_Semaphore, portMAX_DELAY ) == osOK)
 		{
+			active_graph ^= 1;
+			page = MULTIPAGE_GetSelection(hMpage);
+
 			if(DL.print_screen)
 			{
 				DL.print_screen = false;
 				DL_PrintScreen();
 			}
 
-			page = MULTIPAGE_GetSelection(hMpage);
-
 			/* ----------------------------------------------------------------------
 			 ** Draw signals in time domain
 			 ** ------------------------------------------------------------------- */
 			if(page == 0)
 			{
-				float32_t* pU = DSP_GetBufferPointer(voltage);
-				for(i=0;i<32;i++)
+				if(active_graph == 0)
 				{
-					GRAPH_DATA_YT_AddValue(hData_U,GRAPH_YT_EMPTY_DATA);
+					float32_t* p = DSP_GetBufferPointer(voltage);
+					for(i=0;i<32;i++)
+					{
+						GRAPH_DATA_YT_AddValue(hData_U,GRAPH_YT_EMPTY_DATA);
+					}
+					for(;i<FFT_LENGTH+32;i++)
+					{
+						GRAPH_DATA_YT_AddValue(hData_U,(int16_t)p[i-32]/164);
+					}
 				}
-				for(;i<FFT_LENGTH+32;i++)
+				else if(active_graph == 1)
 				{
-					GRAPH_DATA_YT_AddValue(hData_U,(int16_t)pU[i-32]/164);
-				}
-
-				float32_t* pI = DSP_GetBufferPointer(current);
-				for(i=0;i<32;i++)
-				{
-					GRAPH_DATA_YT_AddValue(hData_I,GRAPH_YT_EMPTY_DATA);
-				}
-				for(;i<FFT_LENGTH+32;i++)
-				{
-					GRAPH_DATA_YT_AddValue(hData_I,(int16_t)pI[i-32]/170);
+					float32_t* p = DSP_GetBufferPointer(current);
+					for(i=0;i<32;i++)
+					{
+						GRAPH_DATA_YT_AddValue(hData_I,GRAPH_YT_EMPTY_DATA);
+					}
+					for(;i<FFT_LENGTH+32;i++)
+					{
+						GRAPH_DATA_YT_AddValue(hData_I,(int16_t)p[i-32]/170);
+					}
 				}
 			}
 
@@ -266,10 +271,10 @@ void GUI_Thread(void const *argument)
 				rtc_1sTick = 0;
 			}
 
-			//		sprintf(string, "Power Grid Monitor | CPU: %d%%", osGetCPUUsage());
-			//		FRAMEWIN_SetText(hMW, string);
+					sprintf(string, "Power Grid Monitor | CPU: %d%%", osGetCPUUsage());
+					FRAMEWIN_SetText(hMW, string);
 		}
-		osDelayUntil(&lastTick, 20);
+
 	}
 	/* Should never go here */
 	osThreadTerminate(GUIThreadHandle);
