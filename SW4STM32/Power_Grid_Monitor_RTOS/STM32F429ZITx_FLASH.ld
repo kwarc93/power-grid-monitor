@@ -52,7 +52,7 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x20030000;    /* end of RAM */
+_estack = 0x10010000;    /* end of CCMRAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; 	/* required amount of stack */
@@ -159,7 +159,7 @@ SECTIONS
     _sccmram = .;       /* create a global symbol at ccmram start */
     *(.ccmram)
     *(.ccmram*)
-    
+    STemWin532_CM4_OS_GCC_ot.a(*)
     . = ALIGN(4);
     _eccmram = .;       /* create a global symbol at ccmram end */
   } >CCMRAM AT> FLASH
@@ -190,7 +190,7 @@ SECTIONS
     . = . + _Min_Heap_Size;
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
-  } >RAM
+  } >CCMRAM
 
   
 
