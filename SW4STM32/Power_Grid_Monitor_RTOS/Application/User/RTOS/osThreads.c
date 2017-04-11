@@ -59,6 +59,7 @@ void Default_Thread(void const *argument)
 	uint32_t lastTick;
 	osTimerId lcd_timer;
 
+	/* Initialize Necessary modules */
 	EMWIN_Init();
 	DSP_Init();
 	DL_Init();

@@ -14,18 +14,32 @@ extern void Error_Handler(void);
 extern uint8_t pga_gain;
 
 const char *fileHeader = "Time,Frequency,Power Factor,Apparent Power,Real Power,Reactive Power,"
-										"U_FFT[0],U_FFT[1],U_FFT[2],U_FFT[3],U_FFT[4],"
-										"U_FFT[5],U_FFT[6],U_FFT[7],U_FFT[8],"
-										"U_FFT[9],U_FFT[10],U_FFT[11],U_FFT[12],"
-										"U_FFT[13],U_FFT[14],U_FFT[15],U_FFT[16],"
-										"I_FFT[0],I_FFT[1],I_FFT[2],I_FFT[3],I_FFT[4],"
-										"I_FFT[5],I_FFT[6],I_FFT[7],I_FFT[8],"
-										"I_FFT[9],I_FFT[10],I_FFT[11],I_FFT[12],"
-										"I_FFT[13],I_FFT[14],I_FFT[15],I_FFT[16]\r\n";
+										"U_FFT_R[0],U_FFT_R[1],U_FFT_R[2],U_FFT_R[3],U_FFT_R[4],"
+										"U_FFT_R[5],U_FFT_R[6],U_FFT_R[7],U_FFT_R[8],"
+										"U_FFT_R[9],U_FFT_R[10],U_FFT_R[11],U_FFT_R[12],"
+										"U_FFT_R[13],U_FFT_R[14],U_FFT_R[15],U_FFT_R[16],"
+										"U_FFT_I[0],U_FFT_I[1],U_FFT_I[2],U_FFT_I[3],U_FFT_I[4],"
+										"U_FFT_I[5],U_FFT_I[6],U_FFT_I[7],U_FFT_I[8],"
+										"U_FFT_I[9],U_FFT_I[10],U_FFT_I[11],U_FFT_I[12],"
+										"U_FFT_I[13],U_FFT_I[14],U_FFT_I[15],U_FFT_I[16],"
+
+										"I_FFT_R[0],I_FFT_R[1],I_FFT_R[2],I_FFT_R[3],I_FFT_R[4],"
+										"I_FFT_R[5],I_FFT_R[6],I_FFT_R[7],I_FFT_R[8],"
+										"I_FFT_R[9],I_FFT_R[10],I_FFT_R[11],I_FFT_R[12],"
+										"I_FFT_R[13],I_FFT_R[14],I_FFT_R[15],I_FFT_R[16],"
+										"I_FFT_I[0],I_FFT_I[1],I_FFT_I[2],I_FFT_I[3],I_FFT_I[4],"
+										"I_FFT_I[5],I_FFT_I[6],I_FFT_I[7],I_FFT_I[8],"
+										"I_FFT_I[9],I_FFT_I[10],I_FFT_I[11],I_FFT_I[12],"
+										"I_FFT_I[13],I_FFT_I[14],I_FFT_I[15],I_FFT_I[16]\r\n";
 
 const char *sprintfFormat = "%02d:%02d:%02d,%2.2f,%1.2f,%+4.0f,%+4.0f,%+4.0f,"
 							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
 							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
+							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
+							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
+
+							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,"
+							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,"
 							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,"
 							"%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f,%2.2f\r\n";
 
@@ -66,7 +80,7 @@ void DL_UnmountDisk(void)
 	/* Register the file system object to the FatFs module */
 	if(f_mount(NULL, (TCHAR const*)USBH_Path, 1) != FR_OK)
 	{
-	/* FatFs Deinitialization Error */
+	/* FatFs De-initialization Error */
 	Error_Handler();
 	}
 }
@@ -113,24 +127,46 @@ void DL_LogToFile(struct parameters_t *grid)
 	/* Convert numeric data to string */
 	sprintf(DL.data_buffer, sprintfFormat,rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds,
 										grid->frequency,grid->PF,grid->S,grid->P,grid->Q,
-										U.FFT_out_real[GET_HARMONIC(0)],U.FFT_out_real[GET_HARMONIC(1)],
-										U.FFT_out_real[GET_HARMONIC(2)],U.FFT_out_real[GET_HARMONIC(3)],
-										U.FFT_out_real[GET_HARMONIC(4)],U.FFT_out_real[GET_HARMONIC(5)],
-										U.FFT_out_real[GET_HARMONIC(6)],U.FFT_out_real[GET_HARMONIC(7)],
-										U.FFT_out_real[GET_HARMONIC(8)],U.FFT_out_real[GET_HARMONIC(9)],
-										U.FFT_out_real[GET_HARMONIC(10)],U.FFT_out_real[GET_HARMONIC(11)],
-										U.FFT_out_real[GET_HARMONIC(12)],U.FFT_out_real[GET_HARMONIC(13)],
-										U.FFT_out_real[GET_HARMONIC(14)],U.FFT_out_real[GET_HARMONIC(15)],
-										U.FFT_out_real[GET_HARMONIC(16)],
-										I.FFT_out_real[GET_HARMONIC(0)],I.FFT_out_real[GET_HARMONIC(1)],
-										I.FFT_out_real[GET_HARMONIC(2)],I.FFT_out_real[GET_HARMONIC(3)],
-										I.FFT_out_real[GET_HARMONIC(4)],I.FFT_out_real[GET_HARMONIC(5)],
-										I.FFT_out_real[GET_HARMONIC(6)],I.FFT_out_real[GET_HARMONIC(7)],
-										I.FFT_out_real[GET_HARMONIC(8)],I.FFT_out_real[GET_HARMONIC(9)],
-										I.FFT_out_real[GET_HARMONIC(10)],I.FFT_out_real[GET_HARMONIC(11)],
-										I.FFT_out_real[GET_HARMONIC(12)],I.FFT_out_real[GET_HARMONIC(13)],
-										I.FFT_out_real[GET_HARMONIC(14)],I.FFT_out_real[GET_HARMONIC(15)],
-										I.FFT_out_real[GET_HARMONIC(16)]);
+										/* Real part of FFT voltage harmonics */
+										U.FFT_out_cmplx[GET_HARMONIC_R(0)],U.FFT_out_cmplx[GET_HARMONIC_R(1)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(2)],U.FFT_out_cmplx[GET_HARMONIC_R(3)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(4)],U.FFT_out_cmplx[GET_HARMONIC_R(5)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(6)],U.FFT_out_cmplx[GET_HARMONIC_R(7)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(8)],U.FFT_out_cmplx[GET_HARMONIC_R(9)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(10)],U.FFT_out_cmplx[GET_HARMONIC_R(11)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(12)],U.FFT_out_cmplx[GET_HARMONIC_R(13)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(14)],U.FFT_out_cmplx[GET_HARMONIC_R(15)],
+										U.FFT_out_cmplx[GET_HARMONIC_R(16)],
+										/* Imaginary part of FFT voltage harmonics */
+										U.FFT_out_cmplx[GET_HARMONIC_I(0)],U.FFT_out_cmplx[GET_HARMONIC_I(1)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(2)],U.FFT_out_cmplx[GET_HARMONIC_I(3)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(4)],U.FFT_out_cmplx[GET_HARMONIC_I(5)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(6)],U.FFT_out_cmplx[GET_HARMONIC_I(7)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(8)],U.FFT_out_cmplx[GET_HARMONIC_I(9)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(10)],U.FFT_out_cmplx[GET_HARMONIC_I(11)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(12)],U.FFT_out_cmplx[GET_HARMONIC_I(13)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(14)],U.FFT_out_cmplx[GET_HARMONIC_I(15)],
+										U.FFT_out_cmplx[GET_HARMONIC_I(16)],
+										/* Real part of FFT current harmonics */
+										I.FFT_out_cmplx[GET_HARMONIC_R(0)],I.FFT_out_cmplx[GET_HARMONIC_R(1)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(2)],I.FFT_out_cmplx[GET_HARMONIC_R(3)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(4)],I.FFT_out_cmplx[GET_HARMONIC_R(5)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(6)],I.FFT_out_cmplx[GET_HARMONIC_R(7)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(8)],I.FFT_out_cmplx[GET_HARMONIC_R(9)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(10)],I.FFT_out_cmplx[GET_HARMONIC_R(11)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(12)],I.FFT_out_cmplx[GET_HARMONIC_R(13)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(14)],I.FFT_out_cmplx[GET_HARMONIC_R(15)],
+										I.FFT_out_cmplx[GET_HARMONIC_R(16)],
+										/* Imaginary part of FFT current harmonics */
+										I.FFT_out_cmplx[GET_HARMONIC_I(0)],I.FFT_out_cmplx[GET_HARMONIC_I(1)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(2)],I.FFT_out_cmplx[GET_HARMONIC_I(3)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(4)],I.FFT_out_cmplx[GET_HARMONIC_I(5)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(6)],I.FFT_out_cmplx[GET_HARMONIC_I(7)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(8)],I.FFT_out_cmplx[GET_HARMONIC_I(9)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(10)],I.FFT_out_cmplx[GET_HARMONIC_I(11)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(12)],I.FFT_out_cmplx[GET_HARMONIC_I(13)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(14)],I.FFT_out_cmplx[GET_HARMONIC_I(15)],
+										I.FFT_out_cmplx[GET_HARMONIC_I(16)]);
 	/* Save data to file */
 	f_write(&DL.file, DL.data_buffer, sizeof(DL.data_buffer), NULL);
 	if(rtc_1sTick)	f_sync(&DL.file);

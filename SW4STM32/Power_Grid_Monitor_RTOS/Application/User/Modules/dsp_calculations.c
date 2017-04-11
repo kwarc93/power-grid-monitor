@@ -157,10 +157,10 @@ void DSP_CalcFrequency(void)
  ** ------------------------------------------------------------------- */
 inline void DSP_ADCPLL(void)
 {
-	if(grid.data_averaged == true)
+	if(grid.data_averaged == true && grid.frequency > 45.0F && grid.frequency < 55.0F)
 	{
 		/* Set new value of TIM2 ARR period for correct timing of ADC triggering */
-		htim2.Instance->ARR = (uint32_t)(grid.frequency*11.73f) - 1;
+		htim2.Instance->ARR = (uint32_t)(29325.5F/grid.frequency) - 1;
 	}
 }
 

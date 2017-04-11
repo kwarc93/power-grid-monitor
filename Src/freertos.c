@@ -84,7 +84,7 @@ void MX_FREERTOS_Init(void) {
 	GUIThreadHandle = osThreadCreate (osThread(GUIThread), NULL);
 
 	/* Create & start DL thread */
-	osThreadDef(DLThread, DL_Thread, osPriorityHigh, 0, configMINIMAL_STACK_SIZE*4);
+	osThreadDef(DLThread, DL_Thread, osPriorityHigh, 0, configMINIMAL_STACK_SIZE*8);
 	DLThreadHandle = osThreadCreate (osThread(DLThread), NULL);
 
 }

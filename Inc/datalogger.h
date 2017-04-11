@@ -15,8 +15,8 @@
 #include "dsp_calculations.h"
 
 /* FOR TEST ONLY */
-volatile uint32_t write_time_ms;
-volatile uint8_t timer_onoff;
+//volatile uint32_t write_time_ms;
+//volatile uint8_t timer_onoff;
 /* ------------- */
 struct datalogger_t
 {
@@ -30,7 +30,7 @@ struct datalogger_t
 	uint8_t interval_div_idx;			/* Index in interval_dic table */
 	_Bool save_waveforms;
 	_Bool log_now;
-	char data_buffer[256];				/* 244 char's has total data */
+	char data_buffer[512];
 
 }DL;
 

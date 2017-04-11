@@ -22,7 +22,7 @@
 #define ADC_SAMPLING_F			(102400UL)//
 #define OVERSAMPLING			(16U)//
 #define OVERSAMPLING_BITS		(2U)//
-#define DECIMATION				(2U)
+#define DECIMATION				(2U)//
 
 #define ADC_BUFFER_LENGTH		(4*ADC_SAMPLING_F/BASE_FREQUENCY)
 #define ADC_HALFBUFFER_LENGTH	(ADC_BUFFER_LENGTH/2)
@@ -41,6 +41,8 @@
 #define GET_ADC2_RESULT(x)	((uint16_t) ((uint32_t)(x) >> 16))
 #define GET_ADC1_RESULT(x)	((uint16_t) ((uint32_t)(x) & 0x0000FFFFUL))
 #define GET_HARMONIC(k)		(RFFT_50HZ_BIN*(uint8_t)(k))
+#define GET_HARMONIC_R(k)	(CFFT_50HZ_BIN_R*(uint8_t)(k))
+#define GET_HARMONIC_I(k)	(CFFT_50HZ_BIN_I*(uint8_t)(k))
 #define RMS_VOLTAGE_RANGE	((float32_t)(260.0f * 1.024f))	// [U RMS] * calibr. coeff.
 #define RMS_CURRENT_RANGE	((float32_t)(20.0f * 1.1099479f))	// [I RMS] * calibr. coeff.
 #define PEAK_VOLTAGE_RANGE	((float32_t)(2.0f*RMS_VOLTAGE_RANGE*SQRT2))	// [U PEAK]

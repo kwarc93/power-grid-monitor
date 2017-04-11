@@ -189,6 +189,6 @@ void TouchScreen_Update(void)
 		TS_State.x = prev_state.X;
 		TS_State.y = prev_state.Y;
 
-		GUI_TOUCH_StoreStateEx(&TS_State);
+		if(GUI_Initialized)	GUI_TOUCH_StoreStateEx(&TS_State);
 	}
 }
