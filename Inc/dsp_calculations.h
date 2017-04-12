@@ -35,7 +35,6 @@
 #define BLOCK_SIZE          	32
 #define NUM_TAPS            	29
 
-#define CCMRAM	__attribute__((section (".ccmram")))
 #define SQRT2 (1.414213562f)
 
 #define GET_ADC2_RESULT(x)	((uint16_t) ((uint32_t)(x) >> 16))

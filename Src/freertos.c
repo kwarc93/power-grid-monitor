@@ -71,11 +71,11 @@ void MX_FREERTOS_Init(void) {
 	osSemaphoreWait(GUI_Semaphore, 0U);
 
 	/* Create & start Default thread */
-	osThreadDef(DEFThread, Default_Thread, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE*4);
+	osThreadDef(DEFThread, Default_Thread, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE*8);
 	DEFThreadHandle = osThreadCreate (osThread(DEFThread), NULL);
 
 	/* Create & start DSP thread */
-	osThreadDef(DSPThread, DSP_Thread, osPriorityRealtime, 0, configMINIMAL_STACK_SIZE*4);
+	osThreadDef(DSPThread, DSP_Thread, osPriorityRealtime, 0, configMINIMAL_STACK_SIZE*8);
 	DSPThreadHandle = osThreadCreate (osThread(DSPThread), NULL);
 	osThreadSuspend(DSPThreadHandle);
 

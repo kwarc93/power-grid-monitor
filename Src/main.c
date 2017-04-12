@@ -56,6 +56,8 @@
 #include "gpio.h"
 #include "fmc.h"
 
+#define CCMRAM	__attribute__((section (".ccmram")))
+#define SDRAM	__attribute__((section (".sdram")))
 /* Private variables ---------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
