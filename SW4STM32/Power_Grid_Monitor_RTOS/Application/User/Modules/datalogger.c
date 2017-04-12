@@ -73,6 +73,9 @@ void DL_MountDisk(void)
 	/* FatFs Initialization Error */
 	Error_Handler();
 	}
+	/* Create and get in directory for files created by device */
+    f_mkdir("PGM");
+    f_chdir("/PGM");
 }
 
 void DL_UnmountDisk(void)

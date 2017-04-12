@@ -60,9 +60,10 @@ _Min_Stack_Size = 0x400; 	/* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 192K
-CCMRAM (rw)      : ORIGIN = 0x10000000, LENGTH = 64K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 2048K
+SDRAM (xrw)		: ORIGIN = 0xD0000000, LENGTH = 8192K
+RAM (xrw)      	: ORIGIN = 0x20000000, LENGTH = 192K
+CCMRAM (xrw)    : ORIGIN = 0x10000000, LENGTH = 64K
+FLASH (rx)     	: ORIGIN = 0x8000000, LENGTH = 2048K
 }
 
 /* Define output sections */
@@ -159,12 +160,19 @@ SECTIONS
     _sccmram = .;       /* create a global symbol at ccmram start */
     *(.ccmram)
     *(.ccmram*)
+    /* Place emwWin library in CCMRAM */
     STemWin532_CM4_OS_GCC_ot.a(*)
     . = ALIGN(4);
     _eccmram = .;       /* create a global symbol at ccmram end */
   } >CCMRAM AT> FLASH
 
-  
+  /* SDRAM SECTION */
+  /* Define .sram section and place it in sram region */
+  .sdram :
+  {
+    *(.sdram)
+  } >SDRAM
+
   /* Uninitialized data section */
   . = ALIGN(4);
   .bss :
@@ -181,7 +189,7 @@ SECTIONS
     __bss_end__ = _ebss;
   } >RAM
 
-  /* User_heap_stack section, used to check that there is enough RAM left */
+  /* User_heap_stack section, used to check that there is enough CCMRAM left */
   ._user_heap_stack :
   {
     . = ALIGN(8);

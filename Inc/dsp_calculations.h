@@ -48,9 +48,6 @@
 #define PEAK_VOLTAGE_RANGE	((float32_t)(2.0f*RMS_VOLTAGE_RANGE*SQRT2))	// [U PEAK]
 #define PEAK_CURRENT_RANGE	((float32_t)(2.0f*RMS_CURRENT_RANGE*SQRT2))	// [I PEAK]
 
-/* ADC buffer containing result from ADC1(high 16 bits of ADC_CCR) & ADC2(low 16 bits of ADC_CCR)
- * ADC working in Dual-Simultaneous mode with double buffering (DMA half-transfers) */
-uint32_t ADC_Buffer[ADC_BUFFER_LENGTH];
 uint32_t* ready_buffer;
 _Bool DSP_apply_window;
 enum DSP_BufferToDisplay {voltage, current, voltageFFT, currentFFT};

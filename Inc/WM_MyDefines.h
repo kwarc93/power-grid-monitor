@@ -28,6 +28,7 @@ WM_HWIN hGraph0, hGraph1;
 WM_HWIN hDd1, hDd2, hDd_Uf, hDd_If;
 WM_HWIN hDateTime;
 WM_HWIN hCal;
+WM_HWIN hMessage;
 WM_HWIN hHH, hMM;
 CALENDAR_DATE EMWIN_date;
 

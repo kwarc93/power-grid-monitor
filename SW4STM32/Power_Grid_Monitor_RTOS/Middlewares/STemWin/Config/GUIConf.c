@@ -83,7 +83,7 @@ Purpose     : Display controller initialization
 //
 // Define the available number of bytes available for the GUI
 //
-#define GUI_NUMBYTES  (256*200)
+#define GUI_NUMBYTES  (256*208)
 //
 // 32 bit aligned memory area
 //

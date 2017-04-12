@@ -19,7 +19,6 @@
 */
 
 // USER START (Optionally insert additional includes)
-#include "WM_MyDefines.h"
 // USER END
 
 #include "DIALOG.h"
@@ -31,6 +30,15 @@
 **********************************************************************
 */
 #define ID_WINDOW_0    (GUI_ID_USER + 0x00)
+#define ID_GRAPH_0    (GUI_ID_USER + 0x01)
+#define ID_BUTTON_0    (GUI_ID_USER + 0x02)
+#define ID_TEXT_0    (GUI_ID_USER + 0x03)
+#define ID_TEXT_1    (GUI_ID_USER + 0x04)
+#define ID_TEXT_2    (GUI_ID_USER + 0x05)
+#define ID_TEXT_3    (GUI_ID_USER + 0x06)
+#define ID_TEXT_4    (GUI_ID_USER + 0x07)
+#define ID_DROPDOWN_0    (GUI_ID_USER + 0x08)
+#define ID_TEXT_5    (GUI_ID_USER + 0x09)
 
 
 // USER START (Optionally insert additional defines)
@@ -52,6 +60,15 @@
 */
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
   { WINDOW_CreateIndirect, "Impedances", ID_WINDOW_0, 0, 0, 222, 270, 0, 0x0, 0 },
+  { GRAPH_CreateIndirect, "Graph", ID_GRAPH_0, 12, 75, 200, 132, 0, 0x0, 0 },
+  { BUTTON_CreateIndirect, "Choose file", ID_BUTTON_0, 130, 18, 80, 24, 0, 0x0, 0 },
+  { TEXT_CreateIndirect, "Text1", ID_TEXT_0, 14, 13, 80, 20, 0, 0x64, 0 },
+  { TEXT_CreateIndirect, "Text4", ID_TEXT_1, 14, 217, 52, 17, 0, 0x64, 0 },
+  { TEXT_CreateIndirect, "Text6", ID_TEXT_2, 114, 234, 99, 20, 0, 0x64, 0 },
+  { TEXT_CreateIndirect, "Text3", ID_TEXT_3, 14, 58, 178, 17, 0, 0x64, 0 },
+  { TEXT_CreateIndirect, "Text2", ID_TEXT_4, 14, 33, 80, 20, 0, 0x64, 0 },
+  { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_0, 14, 234, 80, 21, 0, 0x0, 0 },
+  { TEXT_CreateIndirect, "Text5", ID_TEXT_5, 114, 217, 80, 20, 0, 0x64, 0 },
   // USER START (Optionally insert additional widgets)
   // USER END
 };
@@ -72,13 +89,126 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
 */
 static void _cbDialog(WM_MESSAGE * pMsg) {
   WM_HWIN hItem;
+  int     NCode;
+  int     Id;
   // USER START (Optionally insert additional variables)
   // USER END
 
   switch (pMsg->MsgId) {
   case WM_INIT_DIALOG:
-
-	    break;
+    //
+    // Initialization of 'Impedances'
+    //
+    hItem = pMsg->hWin;
+    WINDOW_SetBkColor(hItem, GUI_MAKE_COLOR(0x00FFFFFF));
+    //
+    // Initialization of 'Graph'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_GRAPH_0);
+    GRAPH_SetBorder(hItem, 2, 2, 2, 2);
+    //
+    // Initialization of 'Text1'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
+    TEXT_SetText(hItem, "File:");
+    //
+    // Initialization of 'Text4'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
+    TEXT_SetText(hItem, "Harmonic:");
+    //
+    // Initialization of 'Text6'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
+    TEXT_SetFont(hItem, GUI_FONT_20B_1);
+    TEXT_SetText(hItem, "0.0 Ohm");
+    //
+    // Initialization of 'Text3'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
+    TEXT_SetFont(hItem, GUI_FONT_13_1);
+    TEXT_SetText(hItem, "Harmonic impedance of powre grid:");
+    //
+    // Initialization of 'Text2'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_4);
+    TEXT_SetFont(hItem, GUI_FONT_16B_1);
+    TEXT_SetText(hItem, "LOG-01.csv");
+    //
+    // Initialization of 'Dropdown'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_DROPDOWN_0);
+    DROPDOWN_SetFont(hItem, GUI_FONT_16B_1);
+    DROPDOWN_SetUpMode(hItem,1);
+    DROPDOWN_SetListHeight(hItem, 96 + 2);
+    DROPDOWN_AddString(hItem, "DC");
+    DROPDOWN_AddString(hItem, "50Hz");
+    DROPDOWN_AddString(hItem, "100Hz");
+    DROPDOWN_AddString(hItem, "150Hz");
+    DROPDOWN_AddString(hItem, "200Hz");
+    DROPDOWN_AddString(hItem, "250Hz");
+    DROPDOWN_AddString(hItem, "300Hz");
+    DROPDOWN_AddString(hItem, "350Hz");
+    DROPDOWN_AddString(hItem, "400Hz");
+    DROPDOWN_AddString(hItem, "450Hz");
+    DROPDOWN_AddString(hItem, "500Hz");
+    DROPDOWN_AddString(hItem, "550Hz");
+    DROPDOWN_AddString(hItem, "600Hz");
+    DROPDOWN_AddString(hItem, "650Hz");
+    DROPDOWN_AddString(hItem, "700Hz");
+    DROPDOWN_AddString(hItem, "750Hz");
+    DROPDOWN_AddString(hItem, "800Hz");
+    DROPDOWN_SetAutoScroll(hItem, 1);
+    DROPDOWN_SetScrollbarWidth(hItem,19);
+    DROPDOWN_SetSel(hItem,1);
+    //
+    // Initialization of 'Text5'
+    //
+    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_5);
+    TEXT_SetText(hItem, "Impedance:");
+    // USER START (Optionally insert additional code for further widget initialization)
+    // USER END
+    break;
+  case WM_NOTIFY_PARENT:
+    Id    = WM_GetId(pMsg->hWinSrc);
+    NCode = pMsg->Data.v;
+    switch(Id) {
+    case ID_BUTTON_0: // Notifications sent by 'Choose file'
+      switch(NCode) {
+      case WM_NOTIFICATION_CLICKED:
+        // USER START (Optionally insert code for reacting on notification message)
+        // USER END
+        break;
+      case WM_NOTIFICATION_RELEASED:
+        // USER START (Optionally insert code for reacting on notification message)
+        // USER END
+        break;
+      // USER START (Optionally insert additional code for further notification handling)
+      // USER END
+      }
+      break;
+    case ID_DROPDOWN_0: // Notifications sent by 'Dropdown'
+      switch(NCode) {
+      case WM_NOTIFICATION_CLICKED:
+        // USER START (Optionally insert code for reacting on notification message)
+        // USER END
+        break;
+      case WM_NOTIFICATION_RELEASED:
+        // USER START (Optionally insert code for reacting on notification message)
+        // USER END
+        break;
+      case WM_NOTIFICATION_SEL_CHANGED:
+        // USER START (Optionally insert code for reacting on notification message)
+        // USER END
+        break;
+      // USER START (Optionally insert additional code for further notification handling)
+      // USER END
+      }
+      break;
+    // USER START (Optionally insert additional code for further Ids)
+    // USER END
+    }
+    break;
   // USER START (Optionally insert additional message handling)
   // USER END
   default:
@@ -97,6 +227,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 *
 *       CreateImpedances
 */
+WM_HWIN CreateImpedances(void);
 WM_HWIN CreateImpedances(void) {
   WM_HWIN hWin;
 

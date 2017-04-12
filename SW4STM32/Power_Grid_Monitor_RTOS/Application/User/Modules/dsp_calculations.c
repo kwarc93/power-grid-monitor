@@ -17,6 +17,9 @@ static volatile uint8_t DMA_Full_Ready = 0;
 static uint32_t blockSize = BLOCK_SIZE;
 static uint32_t numBlocks = FFT_LENGTH/BLOCK_SIZE;
 
+/* ADC buffer containing result from ADC1(high 16 bits of ADC_CCR) & ADC2(low 16 bits of ADC_CCR)
+ * ADC working in Dual-Simultaneous mode with double buffering (DMA half-transfers) */
+static uint32_t ADC_Buffer[ADC_BUFFER_LENGTH];
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
@@ -246,7 +249,7 @@ void DSP_CalcPower(void)
 	}
 
 	grid.P = realResult;
-	grid.Q = imagResult;
+	grid.Q = -imagResult;
 }
 /* ----------------------------------------------------------------------
  ** Calculate power factor
