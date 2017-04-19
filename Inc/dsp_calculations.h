@@ -42,15 +42,15 @@
 #define GET_HARMONIC(k)		(RFFT_50HZ_BIN*(uint8_t)(k))
 #define GET_HARMONIC_R(k)	(CFFT_50HZ_BIN_R*(uint8_t)(k))
 #define GET_HARMONIC_I(k)	(CFFT_50HZ_BIN_I*(uint8_t)(k))
-#define RMS_VOLTAGE_RANGE	((float32_t)(260.0f * 1.024f))	// [U RMS] * calibr. coeff.
-#define RMS_CURRENT_RANGE	((float32_t)(20.0f * 1.1099479f))	// [I RMS] * calibr. coeff.
+#define RMS_VOLTAGE_RANGE	((float32_t)(260.0f * 1.024f))				// [U RMS] * calibr. coeff.
+#define RMS_CURRENT_RANGE	((float32_t)(20.0f * 1.1099479f))			// [I RMS] * calibr. coeff.
 #define PEAK_VOLTAGE_RANGE	((float32_t)(2.0f*RMS_VOLTAGE_RANGE*SQRT2))	// [U PEAK]
 #define PEAK_CURRENT_RANGE	((float32_t)(2.0f*RMS_CURRENT_RANGE*SQRT2))	// [I PEAK]
 
 uint32_t* ready_buffer;
 _Bool DSP_apply_window;
 enum DSP_BufferToDisplay {voltage, current, voltageFFT, currentFFT};
-typedef enum {ind_load = 1, cap_load, ind_generator, cap_generator} eLoadCharacter;
+typedef enum {ind_load = 1, cap_load, ind_generator, cap_generator} LoadCharacter_t;
 
 /* --------------------------------------------------------------------------
 ** FIR Coefficients buffer generated using fir1() MATLAB function.
@@ -109,10 +109,11 @@ struct parameters_t
 	float32_t THD_voltage,THD_current;
 	float32_t S,P,Q;
 	float32_t PF, DPF;
-	eLoadCharacter load_type;
+	LoadCharacter_t load_type;
 	_Bool data_averaged;
-}grid;
+};
 
+struct parameters_t grid;
 struct DSP_t U,I;
 
 void DSP_Init(void);
@@ -121,7 +122,7 @@ float32_t* DSP_GetBufferPointer(enum DSP_BufferToDisplay type);
 void DSP_FIRFilter(void);
 void DSP_CalcRMS(void);
 void DSP_CalcFrequency(void);
-inline void DSP_ADCPLL(void);
+void DSP_ADCPLL(void);
 void DSP_CalcFFT(void);
 void DSP_CalcTHD(void);
 void DSP_CalcLoadImpedance(void);
@@ -129,6 +130,7 @@ void DSP_GetLoadCharacter(void);
 void DSP_CalcDPF(void);
 void DSP_CalcPower(void);
 void DSP_CalcPF(void);
+void DSP_CalcHarmonicImpedance(void);
 void DSP_AverageValues(uint8_t avg_number);
 
 

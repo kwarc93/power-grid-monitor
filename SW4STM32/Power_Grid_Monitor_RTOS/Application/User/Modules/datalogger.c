@@ -6,6 +6,9 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 #include "datalogger.h"
 #include "DIALOG.h"
 #include "MESSAGEBOX.h"
@@ -32,7 +35,7 @@ const char *fileHeader = "Time,Frequency,Power Factor,Apparent Power,Real Power,
 										"I_FFT_I[9],I_FFT_I[10],I_FFT_I[11],I_FFT_I[12],"
 										"I_FFT_I[13],I_FFT_I[14],I_FFT_I[15],I_FFT_I[16]\r\n";
 
-const char *sprintfFormat = "%02d:%02d:%02d,%2.2f,%1.2f,%+4.0f,%+4.0f,%+4.0f,"
+const char *sprintfFormat = "%02d:%02d:%02d,%2.2f,%1.2f,%4.0f,%4.0f,%4.0f,"
 							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
 							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
 							"%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,%3.1f,"
@@ -49,11 +52,13 @@ static void WriteByte2File(uint8_t data, void * file)
 	/* Save data to file */
 	f_write(file, &data, 1, &bWritten);
 }
-
+/* ----------------------------------------------------------------------------
+ * Datalogger functions
+ * ----------------------------------------------------------------------------
+ */
 void DL_Init(void)
 {
 	/* Initialize variables */
-	DL.disk_connected = false;
 	DL.print_screen = false;
 	DL.interval_div[0]=1;DL.interval_div[1]=60;DL.interval_div[2]=120;DL.interval_div[3]=240;
 	DL.interval_div_idx = 1;
@@ -62,20 +67,21 @@ void DL_Init(void)
 	rtc_1sTick = 1;
 
 	/* Initialize USB-host & FAT-FS */
+	USB.disk_connected = false;
 	MX_USB_HOST_Init();
 	MX_FATFS_Init();
 }
 void DL_MountDisk(void)
 {
 	/* Register the file system object to the FatFs module */
-	if(f_mount(&DL.USB_disk, (TCHAR const*)USBH_Path, 1) != FR_OK)
+	if(f_mount(&USB.disk, (TCHAR const*)USBH_Path, 1) != FR_OK)
 	{
 	/* FatFs Initialization Error */
 	Error_Handler();
 	}
 	/* Create and get in directory for files created by device */
-    f_mkdir("PGM");
-    f_chdir("/PGM");
+	f_mkdir("PGM");
+	f_chdir("/PGM");
 }
 
 void DL_UnmountDisk(void)
@@ -105,9 +111,6 @@ void DL_CreateFile(void)
 	/* Create header file for CSV */
 	f_puts(fileHeader, &DL.file);
 
-	/* Go to the end of file for future writing */
-	f_lseek(&DL.file, f_size(&DL.file));
-
 	cnt++;
 
 
@@ -120,10 +123,14 @@ void DL_CloseFile(void)
     {
     	Error_Handler();
     }
+    /* Show information on success */
+    MESSAGEBOX_Create(" Log saved!", "Information", GUI_MESSAGEBOX_CF_MODAL);
 }
 
 void DL_LogToFile(struct parameters_t *grid)
 {
+	const uint8_t harmonic_r = CFFT_50HZ_BIN_R;
+	const uint8_t harmonic_i = CFFT_50HZ_BIN_I;
 
 	/* Reset buffer */
 	memset(DL.data_buffer, 0, sizeof(DL.data_buffer));
@@ -131,47 +138,47 @@ void DL_LogToFile(struct parameters_t *grid)
 	sprintf(DL.data_buffer, sprintfFormat,rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds,
 										grid->frequency,grid->PF,grid->S,grid->P,grid->Q,
 										/* Real part of FFT voltage harmonics */
-										U.FFT_out_cmplx[GET_HARMONIC_R(0)],U.FFT_out_cmplx[GET_HARMONIC_R(1)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(2)],U.FFT_out_cmplx[GET_HARMONIC_R(3)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(4)],U.FFT_out_cmplx[GET_HARMONIC_R(5)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(6)],U.FFT_out_cmplx[GET_HARMONIC_R(7)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(8)],U.FFT_out_cmplx[GET_HARMONIC_R(9)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(10)],U.FFT_out_cmplx[GET_HARMONIC_R(11)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(12)],U.FFT_out_cmplx[GET_HARMONIC_R(13)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(14)],U.FFT_out_cmplx[GET_HARMONIC_R(15)],
-										U.FFT_out_cmplx[GET_HARMONIC_R(16)],
+										U.FFT_out_cmplx[harmonic_r*0],U.FFT_out_cmplx[harmonic_r*1],
+										U.FFT_out_cmplx[harmonic_r*2],U.FFT_out_cmplx[harmonic_r*3],
+										U.FFT_out_cmplx[harmonic_r*4],U.FFT_out_cmplx[harmonic_r*5],
+										U.FFT_out_cmplx[harmonic_r*6],U.FFT_out_cmplx[harmonic_r*7],
+										U.FFT_out_cmplx[harmonic_r*8],U.FFT_out_cmplx[harmonic_r*9],
+										U.FFT_out_cmplx[harmonic_r*10],U.FFT_out_cmplx[harmonic_r*11],
+										U.FFT_out_cmplx[harmonic_r*12],U.FFT_out_cmplx[harmonic_r*13],
+										U.FFT_out_cmplx[harmonic_r*14],U.FFT_out_cmplx[harmonic_r*15],
+										U.FFT_out_cmplx[harmonic_r*16],
 										/* Imaginary part of FFT voltage harmonics */
-										U.FFT_out_cmplx[GET_HARMONIC_I(0)],U.FFT_out_cmplx[GET_HARMONIC_I(1)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(2)],U.FFT_out_cmplx[GET_HARMONIC_I(3)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(4)],U.FFT_out_cmplx[GET_HARMONIC_I(5)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(6)],U.FFT_out_cmplx[GET_HARMONIC_I(7)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(8)],U.FFT_out_cmplx[GET_HARMONIC_I(9)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(10)],U.FFT_out_cmplx[GET_HARMONIC_I(11)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(12)],U.FFT_out_cmplx[GET_HARMONIC_I(13)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(14)],U.FFT_out_cmplx[GET_HARMONIC_I(15)],
-										U.FFT_out_cmplx[GET_HARMONIC_I(16)],
+										U.FFT_out_cmplx[harmonic_i*0],U.FFT_out_cmplx[harmonic_i*1],
+										U.FFT_out_cmplx[harmonic_i*2],U.FFT_out_cmplx[harmonic_i*3],
+										U.FFT_out_cmplx[harmonic_i*4],U.FFT_out_cmplx[harmonic_i*5],
+										U.FFT_out_cmplx[harmonic_i*6],U.FFT_out_cmplx[harmonic_i*7],
+										U.FFT_out_cmplx[harmonic_i*8],U.FFT_out_cmplx[harmonic_i*9],
+										U.FFT_out_cmplx[harmonic_i*10],U.FFT_out_cmplx[harmonic_i*11],
+										U.FFT_out_cmplx[harmonic_i*12],U.FFT_out_cmplx[harmonic_i*13],
+										U.FFT_out_cmplx[harmonic_i*14],U.FFT_out_cmplx[harmonic_i*15],
+										U.FFT_out_cmplx[harmonic_i*16],
 										/* Real part of FFT current harmonics */
-										I.FFT_out_cmplx[GET_HARMONIC_R(0)],I.FFT_out_cmplx[GET_HARMONIC_R(1)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(2)],I.FFT_out_cmplx[GET_HARMONIC_R(3)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(4)],I.FFT_out_cmplx[GET_HARMONIC_R(5)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(6)],I.FFT_out_cmplx[GET_HARMONIC_R(7)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(8)],I.FFT_out_cmplx[GET_HARMONIC_R(9)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(10)],I.FFT_out_cmplx[GET_HARMONIC_R(11)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(12)],I.FFT_out_cmplx[GET_HARMONIC_R(13)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(14)],I.FFT_out_cmplx[GET_HARMONIC_R(15)],
-										I.FFT_out_cmplx[GET_HARMONIC_R(16)],
+										I.FFT_out_cmplx[harmonic_r*0],I.FFT_out_cmplx[harmonic_r*1],
+										I.FFT_out_cmplx[harmonic_r*2],I.FFT_out_cmplx[harmonic_r*3],
+										I.FFT_out_cmplx[harmonic_r*4],I.FFT_out_cmplx[harmonic_r*5],
+										I.FFT_out_cmplx[harmonic_r*6],I.FFT_out_cmplx[harmonic_r*7],
+										I.FFT_out_cmplx[harmonic_r*8],I.FFT_out_cmplx[harmonic_r*9],
+										I.FFT_out_cmplx[harmonic_r*10],I.FFT_out_cmplx[harmonic_r*11],
+										I.FFT_out_cmplx[harmonic_r*12],I.FFT_out_cmplx[harmonic_r*13],
+										I.FFT_out_cmplx[harmonic_r*14],I.FFT_out_cmplx[harmonic_r*15],
+										I.FFT_out_cmplx[harmonic_r*16],
 										/* Imaginary part of FFT current harmonics */
-										I.FFT_out_cmplx[GET_HARMONIC_I(0)],I.FFT_out_cmplx[GET_HARMONIC_I(1)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(2)],I.FFT_out_cmplx[GET_HARMONIC_I(3)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(4)],I.FFT_out_cmplx[GET_HARMONIC_I(5)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(6)],I.FFT_out_cmplx[GET_HARMONIC_I(7)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(8)],I.FFT_out_cmplx[GET_HARMONIC_I(9)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(10)],I.FFT_out_cmplx[GET_HARMONIC_I(11)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(12)],I.FFT_out_cmplx[GET_HARMONIC_I(13)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(14)],I.FFT_out_cmplx[GET_HARMONIC_I(15)],
-										I.FFT_out_cmplx[GET_HARMONIC_I(16)]);
+										I.FFT_out_cmplx[harmonic_i*0],I.FFT_out_cmplx[harmonic_i*1],
+										I.FFT_out_cmplx[harmonic_i*2],I.FFT_out_cmplx[harmonic_i*3],
+										I.FFT_out_cmplx[harmonic_i*4],I.FFT_out_cmplx[harmonic_i*5],
+										I.FFT_out_cmplx[harmonic_i*6],I.FFT_out_cmplx[harmonic_i*7],
+										I.FFT_out_cmplx[harmonic_i*8],I.FFT_out_cmplx[harmonic_i*9],
+										I.FFT_out_cmplx[harmonic_i*10],I.FFT_out_cmplx[harmonic_i*11],
+										I.FFT_out_cmplx[harmonic_i*12],I.FFT_out_cmplx[harmonic_i*13],
+										I.FFT_out_cmplx[harmonic_i*14],I.FFT_out_cmplx[harmonic_i*15],
+										I.FFT_out_cmplx[harmonic_i*16]);
 	/* Save data to file */
-	f_write(&DL.file, DL.data_buffer, sizeof(DL.data_buffer), NULL);
+	f_write(&DL.file, DL.data_buffer, strlen(DL.data_buffer), NULL);
 	if(rtc_1sTick)	f_sync(&DL.file);
 
 }
@@ -246,7 +253,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == B1_Pin)
 	{
-		if(DL.disk_connected)
+		if(USB.disk_connected)
 		{
 			DL.print_screen = true;
 		}
@@ -319,4 +326,104 @@ void DL_TestApplication(void)
 			}
 		}
 	}
+}
+/* ----------------------------------------------------------------------------
+ * Datareader functions
+ * ----------------------------------------------------------------------------
+ */
+void DR_Init(void)
+{
+	DR.delimiter = ',';
+	DR.data_alloc = false;
+	DR.lines_nr = 0;
+}
+void DR_GetNumberOfLines(FIL *file, uint32_t *n)
+{
+    char c;
+    UINT br;
+    uint32_t lines;
+
+    lines = 0;
+
+    do
+    {
+        f_read(file, &c, 1U, &br);
+        if(c == '\n')  lines++;
+
+    } while (c != EOF);
+
+    if(c != '\n' && lines != 0)   lines++;
+
+    *n = lines;
+
+}
+
+void DR_ReadFFT(FIL *file, uint8_t harmonic)
+{
+    char *line_pointer;
+    char *record;
+    uint8_t start_col;
+
+    // ------------------- free data --------------------- //
+    if(DR.data_alloc == true)
+    {
+         free(DR.FFT_U);
+         DR.FFT_U = NULL;
+         free(DR.FFT_I);
+         DR.FFT_I = NULL;
+         DR.data_alloc = false;
+    }
+    // --------------------------------------------------- //
+    // ------------------ alloc data --------------------- //
+    if(DR.data_alloc == false)
+    {
+        DR.FFT_U=(float32_t*)malloc(2*DR.lines_nr*sizeof(float32_t));
+        if (DR.FFT_U == NULL) {
+            return;
+        }
+        DR.FFT_I=(float32_t*)malloc(2*DR.lines_nr*sizeof(float32_t));
+        if (DR.FFT_I == NULL) {
+            return;
+        }
+        DR.data_alloc = true;
+    }
+    // --------------------------------------------------- //
+    // Skip first line (header is longer than 512 bytes)
+    // --------------------------------------------------- //
+    char c;
+    UINT br;
+    do
+    {
+        f_read(file, &c, 1U, &br);
+    }
+    while (c != '\n');
+    // ------------------------------------------ //
+
+    for(unsigned int row = 0; row < 2*DR.lines_nr; row+=2)
+    {
+      line_pointer=f_gets(DR.data_buffer,sizeof(DR.data_buffer),file);
+      record = strtok(line_pointer, &DR.delimiter);
+
+      // ----------------- VOLTAGE ----------------- //
+      // If you want to start parsing from specified n-th column, call this 2 lines n-times
+      start_col = START_COLUMN+harmonic;
+      while(start_col--)record = strtok(NULL, &DR.delimiter);
+      // Real part
+      DR.FFT_U[row] = atof(record);
+      start_col = OFFSET;
+      while(start_col--)record = strtok(NULL, &DR.delimiter);
+      // Imaginary part
+      DR.FFT_U[row+1] = atof(record);
+
+      // ------------------ CURRENT --------------- //
+      start_col = OFFSET;
+      while(start_col--)record = strtok(NULL, &DR.delimiter);
+      // Real part
+      DR.FFT_I[row] = atof(record);
+      start_col = OFFSET;
+      while(start_col--)record = strtok(NULL, &DR.delimiter);
+      // Imaginary part
+      DR.FFT_I[row+1] = atof(record);
+      // ------------------------------------------ //
+    }
 }

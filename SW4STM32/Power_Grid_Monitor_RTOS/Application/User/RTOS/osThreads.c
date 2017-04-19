@@ -63,6 +63,7 @@ void Default_Thread(void const *argument)
 	EMWIN_Init();
 	DSP_Init();
 	DL_Init();
+	DR_Init();
 
 	/* Create Touch screen Timer */
 	osTimerDef(TS_Timer, TimerCallback);

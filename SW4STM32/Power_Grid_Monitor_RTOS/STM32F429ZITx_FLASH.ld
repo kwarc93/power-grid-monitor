@@ -60,7 +60,7 @@ _Min_Stack_Size = 0x400; 	/* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-SDRAM (xrw)		: ORIGIN = 0xD0000000, LENGTH = 8192K
+SDRAM (rw)		: ORIGIN = 0xD0000000, LENGTH = 8192K
 RAM (xrw)      	: ORIGIN = 0x20000000, LENGTH = 192K
 CCMRAM (xrw)    : ORIGIN = 0x10000000, LENGTH = 64K
 FLASH (rx)     	: ORIGIN = 0x8000000, LENGTH = 2048K
@@ -148,12 +148,7 @@ SECTIONS
 
   _siccmram = LOADADDR(.ccmram);
 
-  /* CCM-RAM section 
-  * 
-  * IMPORTANT NOTE! 
-  * If initialized variables will be placed in this section,
-  * the startup code needs to be modified to copy the init-values.  
-  */
+  /* CCM-RAM section */
   .ccmram :
   {
     . = ALIGN(4);
@@ -166,11 +161,18 @@ SECTIONS
     _eccmram = .;       /* create a global symbol at ccmram end */
   } >CCMRAM AT> FLASH
 
-  /* SDRAM SECTION */
-  /* Define .sram section and place it in sram region */
+  _sisdram = LOADADDR(.sdram);
+  /* SDRAM section */
+  /* Define .sdram section and place it in sdram region */
   .sdram :
   {
+    . = ALIGN(4);
+    _ssdram = .;       /* create a global symbol at sdram start */
     *(.sdram)
+    *(.sdram*)
+
+    . = ALIGN(4);
+    _esdram = .;       /* create a global symbol at sdram end */
   } >SDRAM
 
   /* Uninitialized data section */

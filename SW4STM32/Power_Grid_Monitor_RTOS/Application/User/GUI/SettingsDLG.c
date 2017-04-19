@@ -261,7 +261,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 					switch(NCode) {
 					case WM_NOTIFICATION_CLICKED:
 						// USER START (Optionally insert code for reacting on notification message)
-						if(DL.disk_connected)
+						if(USB.disk_connected)
 						{
 							if(WM_ItemFlag.CB_LOG)
 							{
@@ -345,7 +345,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 					break;
 				  case WM_NOTIFICATION_RELEASED:
 					// USER START (Optionally insert code for reacting on notification message)
-					if(DL.disk_connected)	DL.save_waveforms = true;
+					if(USB.disk_connected)	DL.save_waveforms = true;
 					// USER END
 					break;
 				  // USER START (Optionally insert additional code for further notification handling)

@@ -96,7 +96,7 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
     
   case HOST_USER_DISCONNECTION:
   Appli_state = APPLICATION_DISCONNECT;
-  DL.disk_connected = false;
+  USB.disk_connected = false;
   DL_UnmountDisk();
   HAL_GPIO_WritePin(LD3_GPIO_Port,LD3_Pin,GPIO_PIN_RESET);
   break;
@@ -105,7 +105,7 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
   Appli_state = APPLICATION_READY;
   DL_MountDisk();
   HAL_GPIO_WritePin(LD3_GPIO_Port,LD3_Pin,GPIO_PIN_SET);
-  DL.disk_connected = true;
+  USB.disk_connected = true;
   break;
 
   case HOST_USER_CONNECTION:
