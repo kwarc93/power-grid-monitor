@@ -52,6 +52,7 @@ void DSP_Init(void)
 	HAL_TIM_IC_Start(&htim3,TIM_CHANNEL_1);
 	/* Start ADC1(master) & ADC2 in dual, double-buffering mode for simultaneous signals acquisition */
 	HAL_ADCEx_MultiModeStart_DMA(&hadc1, ADC_Buffer, ADC_BUFFER_LENGTH);
+	HAL_ADC_Start_IT(&hadc1);
 	HAL_ADC_Start_IT(&hadc2);
 
 	PGA_SetGain(x1);
@@ -64,8 +65,8 @@ void DSP_Init(void)
  ** ------------------------------------------------------------------- */
 _Bool DSP_AutoselectBuffers(void)
 {
-	volatile uint32_t U_mean, I_mean;
-	int32_t U_temporary, I_temporary;
+	float32_t meanU, meanI;
+	uint32_t U_temporary, I_temporary;
 	/* Signal buffer selecting */
 	if(DMA_Half_Ready || DMA_Full_Ready)
 	{
@@ -82,16 +83,6 @@ _Bool DSP_AutoselectBuffers(void)
 			DMA_Full_Ready = 0;
 		}
 
-
-		// Calculate mean value
-		U_mean = I_mean = 0;
-		for(uint16_t i = 0; i < ADC_HALFBUFFER_LENGTH; i++)
-		{
-			U_mean += GET_ADC1_RESULT(ready_buffer[i]);
-			I_mean += GET_ADC2_RESULT(ready_buffer[i]);
-		}
-		U_mean /= ADC_HALFBUFFER_LENGTH; I_mean /= ADC_HALFBUFFER_LENGTH;
-
 		// Enhance resolution, delete DC offset and convert uint32_t to float32_t for CMSIS-DSP purposes:
 		/********************** OVERSAMPLING & DECIMATION *********************/
 		for(uint16_t idx = 0;idx < ADC_HALFBUFFER_LENGTH; idx += OVERSAMPLING)
@@ -99,14 +90,21 @@ _Bool DSP_AutoselectBuffers(void)
 			U_temporary = I_temporary = 0;
 			for(uint16_t sample = idx;sample < (idx + OVERSAMPLING); sample++)
 			{
-				U_temporary += (GET_ADC1_RESULT(ready_buffer[sample]) - U_mean);
-				I_temporary += (GET_ADC2_RESULT(ready_buffer[sample]) - I_mean);
+				U_temporary += (GET_ADC1_RESULT(ready_buffer[sample]));
+				I_temporary += (GET_ADC2_RESULT(ready_buffer[sample]));
 			}
 			U_temporary >>= OVERSAMPLING_BITS; I_temporary >>= OVERSAMPLING_BITS;
 			U.DSP_buffer[idx/(OVERSAMPLING*DECIMATION)] = (float32_t)U_temporary;
 			I.DSP_buffer[idx/(OVERSAMPLING*DECIMATION)] = (float32_t)I_temporary;
 		}
 		/*********************************************************************/
+
+		// Calculate and delete offset
+		arm_mean_f32(U.DSP_buffer, FFT_LENGTH, &meanU);
+		arm_mean_f32(I.DSP_buffer, FFT_LENGTH, &meanI);
+		arm_offset_f32(U.DSP_buffer, (-1.0f)*meanU, U.DSP_buffer, FFT_LENGTH);
+		arm_offset_f32(I.DSP_buffer, (-1.0f)*meanI, I.DSP_buffer, FFT_LENGTH);
+
 		return true;
 	}
 	else	return false;
