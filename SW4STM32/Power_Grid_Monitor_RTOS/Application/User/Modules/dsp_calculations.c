@@ -19,7 +19,7 @@ static uint32_t numBlocks = FFT_LENGTH/BLOCK_SIZE;
 
 /* ADC buffer containing result from ADC1(high 16 bits of ADC_CCR) & ADC2(low 16 bits of ADC_CCR)
  * ADC working in Dual-Simultaneous mode with double buffering (DMA half-transfers) */
-static uint32_t ADC_Buffer[ADC_BUFFER_LENGTH];
+static uint32_t ADC_Buffer[ADC_BUFFER_LENGTH] __attribute__((section (".sdram")));
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
@@ -69,7 +69,7 @@ _Bool DSP_AutoselectBuffers(void)
 	/* Signal buffer selecting */
 	if(DMA_Half_Ready || DMA_Full_Ready)
 	{
-		DSP_ADCPLL();
+//		DSP_ADCPLL();
 
 		if(DMA_Half_Ready)
 		{

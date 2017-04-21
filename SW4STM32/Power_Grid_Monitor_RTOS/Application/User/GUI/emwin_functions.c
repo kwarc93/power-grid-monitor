@@ -20,9 +20,9 @@ static void _UserDrawGraph(WM_HWIN hWin, int Stage)
 		break;
 	case GRAPH_DRAW_AFTER_BORDER:
 
-		for(uint16_t idx = 0; idx < FFT_LENGTH/4 + RFFT_50HZ_BIN; idx+=RFFT_50HZ_BIN)
+		for(uint16_t idx = 0; idx < FFT_LENGTH/4 + 4*RFFT_50HZ_BIN; idx+=RFFT_50HZ_BIN)
 		{
-			x_value = 4*idx;
+			x_value = 4*idx/5;
 
 			/* Draw Voltage FFT */
 			GUI_SetColor(GUI_LIGHTCYAN);
@@ -82,13 +82,13 @@ void EMWIN_Init(void)
 
 /* ------------------------------------ Waveforms Graph Initialization ------------------------------------- */
 	/* Preapare data(U(t)) for Graph0 */
-	hData_U = GRAPH_DATA_YT_Create(GUI_LIGHTCYAN, FFT_LENGTH + 32, 0, 0);
+	hData_U = GRAPH_DATA_YT_Create(GUI_LIGHTCYAN, FFT_LENGTH/4 + 32, 0, 0);
 	GRAPH_AttachData(hGraph0, hData_U);
 	GRAPH_DATA_YT_SetOffY(hData_U, 60);
 	GRAPH_DATA_YT_SetAlign(hData_U,GRAPH_ALIGN_LEFT);
 
 	/* Preapare data(I(t)) for Graph0 */
-	hData_I = GRAPH_DATA_YT_Create(GUI_YELLOW, FFT_LENGTH + 32, 0, 0);
+	hData_I = GRAPH_DATA_YT_Create(GUI_YELLOW, FFT_LENGTH/4 + 32, 0, 0);
 	GRAPH_AttachData(hGraph0, hData_I);
 	GRAPH_DATA_YT_SetOffY(hData_I, 60);
 	GRAPH_DATA_YT_SetAlign(hData_I,GRAPH_ALIGN_LEFT);
@@ -96,10 +96,11 @@ void EMWIN_Init(void)
 	/* Prepare time-scale to Graph0 */
 	hScale0x =  GRAPH_SCALE_Create(114, GUI_TA_HCENTER | GUI_TA_VCENTER, GRAPH_SCALE_CF_HORIZONTAL, TIME_SCALE_TICK);
 	GRAPH_AttachScale(hGraph0, hScale0x);
-	GRAPH_SCALE_SetFactor(hScale0x,0.3125f);
+	GRAPH_SCALE_SetFactor(hScale0x,0.390625f);
 	GRAPH_SCALE_SetTextColor(hScale0x, GUI_WHITE);
 	GRAPH_SCALE_SetOff(hScale0x,TIME_SCALE_TICK);
 	GRAPH_SetGridDistX(hGraph0,TIME_SCALE_TICK);
+	GRAPH_SCALE_SetTickDist(hScale0x,TIME_SCALE_TICK*2);
 //	GRAPH_SetLineStyleV(hGraph0, GUI_LS_DOT);
 	/* Prepare voltage-scale to Graph0 */
 	hScale0yU =  GRAPH_SCALE_Create(30, GUI_TA_RIGHT, GRAPH_SCALE_CF_VERTICAL, VERTICAL_SCALE_TICK);

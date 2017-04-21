@@ -119,7 +119,8 @@ void DSP_Thread(void const *argument)
 				DSP_CalcDPF();
 				DSP_CalcLoadImpedance();
 				DSP_GetLoadCharacter();
-				DSP_AverageValues(5);
+//				DSP_AverageValues(5);
+				grid.data_averaged = true;
 
 				/* ----------------------------------------------------------------------
 				 ** Log calculated parameters
@@ -182,29 +183,26 @@ void GUI_Thread(void const *argument)
 			 ** ------------------------------------------------------------------- */
 			if(page == 0)
 			{
-				if(active_graph == 0)
+				float32_t* p;
+
+				p = DSP_GetBufferPointer(voltage);
+				for(i=0;i<32;i++)
 				{
-					float32_t* p = DSP_GetBufferPointer(voltage);
-					for(i=0;i<32;i++)
-					{
-						GRAPH_DATA_YT_AddValue(hData_U,GRAPH_YT_EMPTY_DATA);
-					}
-					for(;i<FFT_LENGTH+32;i++)
-					{
-						GRAPH_DATA_YT_AddValue(hData_U,(int16_t)p[i-32]/164);
-					}
+					GRAPH_DATA_YT_AddValue(hData_U,GRAPH_YT_EMPTY_DATA);
 				}
-				else if(active_graph == 1)
+				for(;i<FFT_LENGTH/4+32;i++)
 				{
-					float32_t* p = DSP_GetBufferPointer(current);
-					for(i=0;i<32;i++)
-					{
-						GRAPH_DATA_YT_AddValue(hData_I,GRAPH_YT_EMPTY_DATA);
-					}
-					for(;i<FFT_LENGTH+32;i++)
-					{
-						GRAPH_DATA_YT_AddValue(hData_I,(int16_t)p[i-32]/170);
-					}
+					GRAPH_DATA_YT_AddValue(hData_U,(int16_t)p[i-32]/164);
+				}
+
+				p = DSP_GetBufferPointer(current);
+				for(i=0;i<32;i++)
+				{
+					GRAPH_DATA_YT_AddValue(hData_I,GRAPH_YT_EMPTY_DATA);
+				}
+				for(;i<FFT_LENGTH/4+32;i++)
+				{
+					GRAPH_DATA_YT_AddValue(hData_I,(int16_t)p[i-32]/170);
 				}
 			}
 
