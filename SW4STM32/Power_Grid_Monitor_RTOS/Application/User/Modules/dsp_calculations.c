@@ -15,7 +15,7 @@ static volatile uint8_t DMA_Half_Ready = 0;
 static volatile uint8_t DMA_Full_Ready = 0;
 
 static uint32_t blockSize = BLOCK_SIZE;
-static uint32_t numBlocks = FFT_LENGTH/BLOCK_SIZE;
+static uint32_t numBlocks = ADC_HALFBUFFER_LENGTH/BLOCK_SIZE;
 
 /* ADC buffer containing result from ADC1(high 16 bits of ADC_CCR) & ADC2(low 16 bits of ADC_CCR)
  * ADC working in Dual-Simultaneous mode with double buffering (DMA half-transfers) */
@@ -65,12 +65,10 @@ void DSP_Init(void)
  ** ------------------------------------------------------------------- */
 _Bool DSP_AutoselectBuffers(void)
 {
-	float32_t meanU, meanI;
-	uint32_t U_temporary, I_temporary;
 	/* Signal buffer selecting */
 	if(DMA_Half_Ready || DMA_Full_Ready)
 	{
-		DSP_ADCPLL();
+//		DSP_ADCPLL();
 
 		if(DMA_Half_Ready)
 		{
@@ -83,27 +81,12 @@ _Bool DSP_AutoselectBuffers(void)
 			DMA_Full_Ready = 0;
 		}
 
-		// Enhance resolution, delete DC offset and convert uint32_t to float32_t for CMSIS-DSP purposes:
-		/********************** OVERSAMPLING & DECIMATION *********************/
-		for(uint16_t idx = 0;idx < ADC_HALFBUFFER_LENGTH; idx += OVERSAMPLING)
+		// Copy ADC samples to float buffers
+		for(uint16_t idx = 0; idx < ADC_HALFBUFFER_LENGTH; idx++)
 		{
-			U_temporary = I_temporary = 0;
-			for(uint16_t sample = idx;sample < (idx + OVERSAMPLING); sample++)
-			{
-				U_temporary += (GET_ADC1_RESULT(ready_buffer[sample]));
-				I_temporary += (GET_ADC2_RESULT(ready_buffer[sample]));
-			}
-			U_temporary >>= OVERSAMPLING_BITS; I_temporary >>= OVERSAMPLING_BITS;
-			U.DSP_buffer[idx/(OVERSAMPLING*DECIMATION)] = (float32_t)U_temporary;
-			I.DSP_buffer[idx/(OVERSAMPLING*DECIMATION)] = (float32_t)I_temporary;
+			U.ADC_buffer[idx] = (float32_t)(GET_ADC1_RESULT(ready_buffer[idx]));
+			I.ADC_buffer[idx] = (float32_t)(GET_ADC2_RESULT(ready_buffer[idx]));
 		}
-		/*********************************************************************/
-
-		// Calculate and delete offset
-		arm_mean_f32(U.DSP_buffer, FFT_LENGTH, &meanU);
-		arm_mean_f32(I.DSP_buffer, FFT_LENGTH, &meanI);
-		arm_offset_f32(U.DSP_buffer, (-1.0f)*meanU, U.DSP_buffer, FFT_LENGTH);
-		arm_offset_f32(I.DSP_buffer, (-1.0f)*meanI, I.DSP_buffer, FFT_LENGTH);
 
 		return true;
 	}
@@ -118,7 +101,41 @@ inline float32_t* DSP_GetBufferPointer(enum DSP_BufferToDisplay type)
 
 	return buff_array[type];
 }
+/* ----------------------------------------------------------------------
+ ** Enhance resolution of ADC by oversampling and decimation
+ ** ------------------------------------------------------------------- */
+void DSP_IncreaseADCBits(void)
+{
+	float32_t U_temporary, I_temporary;
 
+	// Enhance resolution by oversampling and decimation (12bit -> 14bit)
+	for(uint16_t idx = 0;idx < ADC_HALFBUFFER_LENGTH; idx += OVERSAMPLING)
+	{
+		U_temporary = I_temporary = 0;
+		for(uint16_t sample = idx;sample < (idx + OVERSAMPLING); sample++)
+		{
+			U_temporary += U.ADC_buffer[sample];
+			I_temporary += I.ADC_buffer[sample];
+		}
+		U_temporary *= 0.25f; I_temporary *= 0.25f;	// divide by 2^n, n - oversampling bits
+
+		U.DSP_buffer[idx/(OVERSAMPLING*DECIMATION)] = U_temporary;
+		I.DSP_buffer[idx/(OVERSAMPLING*DECIMATION)] = I_temporary;
+	}
+
+}
+/* ----------------------------------------------------------------------
+ ** Delete offset from signals
+ ** ------------------------------------------------------------------- */
+void DSP_DeleteOffset(void)
+{
+	float32_t meanU, meanI;
+	// Calculate and delete offset
+	arm_mean_f32(U.DSP_buffer, FFT_LENGTH, &meanU);
+	arm_mean_f32(I.DSP_buffer, FFT_LENGTH, &meanI);
+	arm_offset_f32(U.DSP_buffer, (-1.0f)*meanU, U.DSP_buffer, FFT_LENGTH);
+	arm_offset_f32(I.DSP_buffer, (-1.0f)*meanI, I.DSP_buffer, FFT_LENGTH);
+}
 /* ----------------------------------------------------------------------
  ** Call the FIR process function for every blockSize samples
  ** ------------------------------------------------------------------- */
@@ -126,8 +143,8 @@ void DSP_FIRFilter(void)
 {
 	for(uint16_t i=0; i < numBlocks; i++)
 	{
-		arm_fir_f32(&U.hFIR, U.DSP_buffer + (i * blockSize), U.DSP_buffer + (i * blockSize), blockSize);
-		arm_fir_f32(&I.hFIR, I.DSP_buffer + (i * blockSize), I.DSP_buffer + (i * blockSize), blockSize);
+		arm_fir_f32(&U.hFIR, U.ADC_buffer + (i * blockSize), U.ADC_buffer + (i * blockSize), blockSize);
+		arm_fir_f32(&I.hFIR, I.ADC_buffer + (i * blockSize), I.ADC_buffer + (i * blockSize), blockSize);
 	}
 }
 /* ----------------------------------------------------------------------
@@ -247,7 +264,7 @@ void DSP_CalcPower(void)
 	}
 
 	grid.P = realResult;
-	grid.Q = -imagResult;
+	grid.Q = imagResult;
 }
 /* ----------------------------------------------------------------------
  ** Calculate power factor

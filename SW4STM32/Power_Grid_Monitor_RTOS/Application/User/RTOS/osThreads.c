@@ -96,11 +96,16 @@ void DSP_Thread(void const *argument)
 			{
 				HAL_GPIO_WritePin(GPIOG,LD4_Pin,GPIO_PIN_SET);
 
+				// Filter both signals
 				if(WM_ItemFlag.CB_FIR)
 				{
 					DSP_FIRFilter();
 				}
 
+				DSP_IncreaseADCBits();
+				DSP_DeleteOffset();
+
+				// Copy waveforms to display buffers
 				arm_copy_f32(U.DSP_buffer, U.GRAPH_buffer, FFT_LENGTH);
 				arm_copy_f32(I.DSP_buffer, I.GRAPH_buffer, FFT_LENGTH);
 
@@ -254,16 +259,16 @@ void GUI_Thread(void const *argument)
 				switch(grid.load_type)
 				{
 				case ind_load:
-					TEXT_SetText(hText_ZL,"Load: inductive (-)");
+					TEXT_SetText(hText_ZL,"inductive load (-)");
 					break;
 				case ind_generator:
-					TEXT_SetText(hText_ZL,"Load: inductive (+)");
+					TEXT_SetText(hText_ZL,"inductive load (+)");
 					break;
 				case cap_generator:
-					TEXT_SetText(hText_ZL,"Load: capacitive (+)");
+					TEXT_SetText(hText_ZL,"capacitive load (+)");
 					break;
 				case cap_load:
-					TEXT_SetText(hText_ZL,"Load: capacitive (-)");
+					TEXT_SetText(hText_ZL,"capacitive load (-)");
 					break;
 				}
 
