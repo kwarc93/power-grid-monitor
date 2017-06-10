@@ -60,11 +60,11 @@
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
   { FRAMEWIN_CreateIndirect, "Set date & time", ID_FRAMEWIN_0, 30, 40, 180, 240, 0, 0x64, 0 },
   { TEXT_CreateIndirect, "Hours", ID_TEXT_0, 30, 6, 37, 16, 0, 0x0, 0 },
-  { BUTTON_CreateIndirect, "OK", ID_BUTTON_0, 20, 190, 50, 20, 0, 0x0, 0 },
+  { BUTTON_CreateIndirect, "OK", ID_BUTTON_0, 98, 188, 50, 24, 0, 0x0, 0 },
   { TEXT_CreateIndirect, "Minutes", ID_TEXT_1, 105, 6, 47, 17, 0, 0x0, 0 },
   { SPINBOX_CreateIndirect, "HH", ID_SPINBOX_0, 20, 22, 50, 34, 0, 0x0, 0 },
   { SPINBOX_CreateIndirect, "MM", ID_SPINBOX_1, 98, 22, 50, 34, 0, 0x0, 0 },
-  { BUTTON_CreateIndirect, "Cancel", ID_BUTTON_1, 98, 190, 50, 20, 0, 0x0, 0 },
+  { BUTTON_CreateIndirect, "Cancel", ID_BUTTON_1, 20, 188, 50, 24, 0, 0x0, 0 },
   // USER START (Optionally insert additional widgets)
   // USER END
 };
@@ -244,7 +244,6 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 *
 *       CreateSet date & time
 */
-WM_HWIN CreateSetDateTime(void);
 WM_HWIN CreateSetDateTime(void) {
   WM_HWIN hWin;
 

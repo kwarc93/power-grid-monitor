@@ -65,11 +65,6 @@ void DL_Init(void)
 	DL.save_waveforms = false;
 	DL.log_now = false;
 	rtc_1sTick = 1;
-
-	/* Initialize USB-host & FAT-FS */
-	USB.disk_connected = false;
-	MX_USB_HOST_Init();
-	MX_FATFS_Init();
 }
 void DL_MountDisk(void)
 {
@@ -335,8 +330,10 @@ void DR_Init(void)
 {
 	DR.delimiter = ',';
 	DR.data_alloc = false;
+	DR.scan_files = false;
 	DR.lines_nr = 0;
 }
+
 void DR_GetNumberOfLines(FIL *file, uint32_t *n)
 {
     char c;
@@ -399,7 +396,7 @@ void DR_ReadFFT(FIL *file, uint8_t harmonic)
     while (c != '\n');
     // ------------------------------------------ //
 
-    for(unsigned int row = 0; row < 2*DR.lines_nr; row+=2)
+    for(uint32_t row = 0; row < 2*DR.lines_nr; row+=2)
     {
       line_pointer=f_gets(DR.data_buffer,sizeof(DR.data_buffer),file);
       record = strtok(line_pointer, &DR.delimiter);
@@ -427,3 +424,91 @@ void DR_ReadFFT(FIL *file, uint8_t harmonic)
       // ------------------------------------------ //
     }
 }
+
+static FRESULT GetCSVFilesCount(char* path, uint8_t* count_files)
+{
+	FRESULT res;
+	DIR dir;
+	FILINFO fno;
+
+	/* Open the directory */
+	res = f_opendir(&dir, path);
+
+	if (res == FR_OK)
+	{
+		for (;;)
+		{
+			/* Read a directory item */
+			res = f_readdir(&dir, &fno);
+			/* Break on error or end of dir */
+			if (res != FR_OK || fno.fname[0] == 0) break;
+			/* If file name contains 'LOG' */
+			if(strstr(fno.fname, "LOG") != NULL) *count_files += 1;
+		}
+	}
+	res = f_closedir(&dir);
+	return res;
+}
+
+static FRESULT DR_ListFiles(char* path, FILINFO* file)
+{
+	FRESULT res;
+	DIR dir;
+	FILINFO fno;
+	uint8_t idx = 0;
+
+	/* Open the directory */
+	res = f_opendir(&dir, path);
+
+	if (res == FR_OK)
+	{
+		for (;;)
+		{
+			/* Read a directory item */
+			res = f_readdir(&dir, &fno);
+			/* Break on error or end of dir */
+			if (res != FR_OK || fno.fname[0] == 0) break;
+			/* If file name contains 'LOG' */
+			if(strstr(fno.fname, "LOG") != NULL) file[idx++] = fno;
+		}
+	}
+	res = f_closedir(&dir);
+	return res;
+}
+
+FRESULT DR_ScanFilesOnDisk(void)
+{
+
+	// ------------------- free data --------------------- //
+	if(DR.scan_files == true)
+	{
+		free(DR.LOG_files);
+		DR.LOG_files = NULL;
+		DR.scan_files = false;
+		DR.files_count = 0;
+	}
+	// --------------------------------------------------- //
+
+	/* Get number of LOG-xx.csv files in current directory */
+	FRESULT  fr;
+	fr = GetCSVFilesCount(".", &DR.files_count);
+	if(fr != FR_OK) return fr;
+
+	// ------------------ alloc data --------------------- //
+	if(DR.scan_files == false)
+	{
+		DR.LOG_files = (FILINFO *) malloc(DR.files_count * sizeof(FILINFO));
+		if(DR.LOG_files == NULL)
+		{
+			Error_Handler();
+		}
+		DR.scan_files = true;
+	}
+	// --------------------------------------------------- //
+
+	/* Save info of scanned LOG-xx.csv files in array */
+	fr = DR_ListFiles(".", DR.LOG_files);
+
+	return fr;
+}
+

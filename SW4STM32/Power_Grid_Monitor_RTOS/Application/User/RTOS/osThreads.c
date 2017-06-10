@@ -59,6 +59,11 @@ void Default_Thread(void const *argument)
 	uint32_t lastTick;
 	osTimerId lcd_timer;
 
+	/* Initialize USB-host & FAT-FS */
+	USB.disk_connected = false;
+	MX_USB_HOST_Init();
+	MX_FATFS_Init();
+
 	/* Initialize Necessary modules */
 	EMWIN_Init();
 	DSP_Init();

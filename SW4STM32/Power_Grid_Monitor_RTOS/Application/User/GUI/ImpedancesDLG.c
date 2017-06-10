@@ -19,6 +19,8 @@
 */
 
 // USER START (Optionally insert additional includes)
+#include "WM_MyDefines.h"
+#include "datalogger.h"
 // USER END
 
 #include "DIALOG.h"
@@ -66,7 +68,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
   { TEXT_CreateIndirect, "Text4", ID_TEXT_1, 14, 217, 52, 17, 0, 0x64, 0 },
   { TEXT_CreateIndirect, "Text6", ID_TEXT_2, 114, 234, 99, 20, 0, 0x64, 0 },
   { TEXT_CreateIndirect, "Text3", ID_TEXT_3, 14, 58, 178, 17, 0, 0x64, 0 },
-  { TEXT_CreateIndirect, "Text2", ID_TEXT_4, 14, 33, 80, 20, 0, 0x64, 0 },
+  { TEXT_CreateIndirect, "Text2", ID_TEXT_4, 14, 33, 100, 20, 0, 0x64, 0 },
   { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_0, 14, 234, 80, 21, 0, 0x0, 0 },
   { TEXT_CreateIndirect, "Text5", ID_TEXT_5, 114, 217, 80, 20, 0, 0x64, 0 },
   // USER START (Optionally insert additional widgets)
@@ -127,13 +129,14 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
     TEXT_SetFont(hItem, GUI_FONT_13_1);
-    TEXT_SetText(hItem, "Harmonic impedance of powre grid:");
+    TEXT_SetText(hItem, "Harmonic impedance of power grid:");
     //
     // Initialization of 'Text2'
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_4);
     TEXT_SetFont(hItem, GUI_FONT_16B_1);
-    TEXT_SetText(hItem, "LOG-01.csv");
+    TEXT_SetText(hItem, "no file selected");
+    hFileName = hItem;
     //
     // Initialization of 'Dropdown'
     //
@@ -181,6 +184,23 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
         break;
       case WM_NOTIFICATION_RELEASED:
         // USER START (Optionally insert code for reacting on notification message)
+    	  if(hChooseFile == 0 && USB.disk_connected)
+    	  {
+    		  DR_ScanFilesOnDisk();
+    		  hChooseFile = CreateChooseFile();
+    		  hMainDir = TREEVIEW_ITEM_Create(TREEVIEW_ITEM_TYPE_NODE, "PGM", 0);
+    		  TREEVIEW_AttachItem(hTreeView, hMainDir, 0, 0);
+    		  for(uint8_t i = 0; i < DR.files_count; i++)
+    		  {
+    			  TREEVIEW_ITEM_Handle hTreeItemNew = TREEVIEW_ITEM_Create(TREEVIEW_ITEM_TYPE_LEAF, DR.LOG_files[i].fname, i);
+    			  TREEVIEW_AttachItem(hTreeView, hTreeItemNew, hMainDir, TREEVIEW_INSERT_FIRST_CHILD);
+    		  }
+
+    		  TREEVIEW_SetAutoScrollV(hTreeView, 1);
+    		  TREEVIEW_ITEM_Expand(hMainDir);
+    		  WM_DisableWindow(hMW);
+    		  WM_DisableWindow(hMpage);
+    	  }
         // USER END
         break;
       // USER START (Optionally insert additional code for further notification handling)
