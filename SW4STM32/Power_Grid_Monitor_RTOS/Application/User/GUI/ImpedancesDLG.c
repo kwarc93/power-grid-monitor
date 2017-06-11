@@ -123,7 +123,8 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
     TEXT_SetFont(hItem, GUI_FONT_20B_1);
-    TEXT_SetText(hItem, "0.0 Ohm");
+    TEXT_SetText(hItem, "0.00 Ohm");
+    hText_ZG = hItem;
     //
     // Initialization of 'Text3'
     //
@@ -186,20 +187,23 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
         // USER START (Optionally insert code for reacting on notification message)
     	  if(hChooseFile == 0 && USB.disk_connected)
     	  {
-    		  DR_ScanFilesOnDisk();
-    		  hChooseFile = CreateChooseFile();
-    		  hMainDir = TREEVIEW_ITEM_Create(TREEVIEW_ITEM_TYPE_NODE, "PGM", 0);
-    		  TREEVIEW_AttachItem(hTreeView, hMainDir, 0, 0);
-    		  for(uint8_t i = 0; i < DR.files_count; i++)
+    		  if(DR_ScanFilesOnDisk() == FR_OK)
     		  {
-    			  TREEVIEW_ITEM_Handle hTreeItemNew = TREEVIEW_ITEM_Create(TREEVIEW_ITEM_TYPE_LEAF, DR.LOG_files[i].fname, i);
-    			  TREEVIEW_AttachItem(hTreeView, hTreeItemNew, hMainDir, TREEVIEW_INSERT_FIRST_CHILD);
-    		  }
+    			  hChooseFile = CreateChooseFile();
+    			  hMainDir = TREEVIEW_ITEM_Create(TREEVIEW_ITEM_TYPE_NODE, "PGM", 0);
+    			  TREEVIEW_AttachItem(hTreeView, hMainDir, 0, 0);
 
-    		  TREEVIEW_SetAutoScrollV(hTreeView, 1);
-    		  TREEVIEW_ITEM_Expand(hMainDir);
-    		  WM_DisableWindow(hMW);
-    		  WM_DisableWindow(hMpage);
+    			  for(uint8_t i = DR.files_count; i > 0; i--)
+    			  {
+    				  TREEVIEW_ITEM_Handle hTreeItemNew = TREEVIEW_ITEM_Create(TREEVIEW_ITEM_TYPE_LEAF, DR.LOG_files[i-1].fname, i-1);
+    				  TREEVIEW_AttachItem(hTreeView, hTreeItemNew, hMainDir, TREEVIEW_INSERT_FIRST_CHILD);
+    			  }
+
+    			  TREEVIEW_SetAutoScrollV(hTreeView, 1);
+    			  TREEVIEW_ITEM_Expand(hMainDir);
+    			  WM_DisableWindow(hMW);
+    			  WM_DisableWindow(hMpage);
+    		  }
     	  }
         // USER END
         break;

@@ -166,6 +166,33 @@ void DL_Thread(void const *argument)
 	osThreadTerminate(DLThreadHandle);
 }
 
+void DR_Thread(void const *argument)
+{
+	(void) argument;
+
+	for(;;)
+	{
+		if(osSemaphoreWait(DR_Semaphore, portMAX_DELAY) == osOK)
+		{
+			FIL csv_file;
+			FRESULT fr;
+
+			fr = f_open(&csv_file, DR.filename, FA_READ);
+
+			if(fr == FR_OK)
+			{
+				DR_ReadFFT(&csv_file, 1);
+				DSP_CalcGridImpedance();
+				grid.grid_impedance = 0.14f;	// example value
+			}
+
+			fr = f_close(&csv_file);
+		}
+	}
+	/* Should never go here */
+	osThreadTerminate(DRThreadHandle);
+}
+
 void GUI_Thread(void const *argument)
 {
 	(void) argument;
@@ -277,6 +304,12 @@ void GUI_Thread(void const *argument)
 					break;
 				}
 
+			}
+
+			if(page == 2)
+			{
+				sprintf(string, "%.2f Ohm", grid.grid_impedance);
+				TEXT_SetText(hText_ZG, string);
 			}
 
 			if(page == 3 && rtc_1sTick)

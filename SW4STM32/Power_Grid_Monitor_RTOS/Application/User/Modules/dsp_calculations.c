@@ -355,3 +355,93 @@ void DSP_AverageValues(uint8_t avg_number)
 		counter = 0;
 	}
 }
+
+//static void calcDelta(float32_t *voltage, float32_t *current, float32_t c_threshold)
+//{
+//	// #1 length of current and voltage buffers must be the same!
+//
+//	complex_t v_delta = 0;
+//	complex_t c_delta = 0;
+//
+//	complex_t c_mean0 = 0;
+//	complex_t v_mean0 = 0;
+//	complex_t c_mean1 = 0;
+//	complex_t v_mean1 = 0;
+//
+//	float32_t c_prev_val = 0;
+//	float32_t c_act_val = 0;
+//	float32_t phase_diff = 0;
+//
+//	uint8_t state = 0;
+//	uint32_t num_of_triggers = 0;
+//	uint32_t start_idx = 1;
+//	uint32_t length = DR.lines_nr;
+//
+//	arm_cmplx_mag_f32(&current[0], c_act_val, 1U);
+//
+//	for (uint32_t idx = 0; idx < length; idx+=2)
+//	{
+//
+//		arm_cmplx_mag_f32(&current[idx], c_act_val, 1U);
+//
+//		// State "0"
+//		if((state == 0))
+//		{
+//			c_mean0 = mean(current((start_idx):(idx-1)));
+//			v_mean0 = mean(voltage((start_idx):(idx-1)));
+//			c_mean +=
+//			if(((c_act_val > (c_prev_val + c_threshold)) || (c_act_val < (c_prev_val - c_threshold))))
+//			{
+//			start_idx = idx;
+//			state = 1;
+//			c_prev_val = c_act_val;
+//			if(num_of_triggers != 0)
+//			{
+//				num_of_triggers = num_of_triggers + 1;
+//				phase_diff = angle(v_mean0) - angle(v_mean1);
+//				v_delta(num_of_triggers) = v_mean1*exp(phase_diff*1i)-v_mean0;
+//				c_delta(num_of_triggers) = c_mean1*exp(phase_diff*1i)-c_mean0;
+//			}
+//			}
+//		}
+//
+//
+//		// State "1"
+//		else if(((c_act_val > (c_prev_val + c_threshold)) || (c_act_val < (c_prev_val - c_threshold))) && (state == 1))
+//		{
+//			c_mean1 = mean(current((start_idx):(idx-1)));
+//			v_mean1 = mean(voltage((start_idx):(idx-1)));
+//			start_idx = idx;
+//			state = 0;
+//			c_prev_val = c_act_val;
+//			num_of_triggers = num_of_triggers + 1;
+//			phase_diff = angle(v_mean0) - angle(v_mean1);
+//			v_delta(num_of_triggers) = v_mean1*exp(phase_diff*1i)-v_mean0;
+//			c_delta(num_of_triggers) = c_mean1*exp(phase_diff*1i)-c_mean0;
+//		}
+//		else
+//		{
+//
+//			c_prev_val = c_act_val;
+//		}
+//	}
+//}
+
+void DSP_CalcGridImpedance(void)
+{
+	//Calculate source impedance - method 2
+//	for h = 1:17
+//	v = voltage_c(:,h);
+//	c = current_c(:,h);
+//	[deltaV, deltaI] = calcDelta(v, c, threshold_2*max(c));
+//	// Impedance:
+//	Zs2_k = -(sum(conj(deltaI).*deltaV))/(sum(abs(deltaI).^2));
+//	Zsh2(h) =  abs(Zs2_k);
+//	// Coherency:
+//	C(h) = (abs(sum(conj(deltaI).*deltaV)))^2/((sum(abs(deltaI).^2))*(sum(abs(deltaV).^2)));
+//
+//	end
+//
+//	Zs2_k = Zsh2(k) %display
+//	C_k = C(k) %display
+}

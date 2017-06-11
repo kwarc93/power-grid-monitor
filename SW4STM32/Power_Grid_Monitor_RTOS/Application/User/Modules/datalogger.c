@@ -16,6 +16,10 @@
 extern void Error_Handler(void);
 extern uint8_t pga_gain;
 
+struct datareader_t DR  __attribute__((section (".sdram")));
+struct datalogger_t DL;
+struct disk_t USB;
+
 const char *fileHeader = "Time,Frequency,Power Factor,Apparent Power,Real Power,Reactive Power,"
 										"U_FFT_R[0],U_FFT_R[1],U_FFT_R[2],U_FFT_R[3],U_FFT_R[4],"
 										"U_FFT_R[5],U_FFT_R[6],U_FFT_R[7],U_FFT_R[8],"
@@ -334,26 +338,27 @@ void DR_Init(void)
 	DR.lines_nr = 0;
 }
 
-void DR_GetNumberOfLines(FIL *file, uint32_t *n)
+void DR_GetNumberOfLines(FIL *file, uint32_t *lines_count)
 {
     char c;
     UINT br;
-    uint32_t lines;
+    uint32_t lines = 0;
 
-    lines = 0;
+    f_lseek(file,0);
 
     do
     {
         f_read(file, &c, 1U, &br);
         if(c == '\n')  lines++;
 
-    } while (c != EOF);
+    } while (!f_eof(file));
 
     if(c != '\n' && lines != 0)   lines++;
 
-    *n = lines;
+    *lines_count = lines;
 
 }
+
 
 void DR_ReadFFT(FIL *file, uint8_t harmonic)
 {
@@ -371,6 +376,10 @@ void DR_ReadFFT(FIL *file, uint8_t harmonic)
          DR.data_alloc = false;
     }
     // --------------------------------------------------- //
+
+	DR_GetNumberOfLines(file, &DR.lines_nr);
+	DR.lines_nr -= 1; // Substract header line
+
     // ------------------ alloc data --------------------- //
     if(DR.data_alloc == false)
     {
@@ -387,6 +396,7 @@ void DR_ReadFFT(FIL *file, uint8_t harmonic)
     // --------------------------------------------------- //
     // Skip first line (header is longer than 512 bytes)
     // --------------------------------------------------- //
+    f_lseek(file,0);
     char c;
     UINT br;
     do
@@ -425,11 +435,12 @@ void DR_ReadFFT(FIL *file, uint8_t harmonic)
     }
 }
 
-static FRESULT GetCSVFilesCount(char* path, uint8_t* count_files)
+static FRESULT GetCSVFilesCount(char* path, uint8_t* files_count)
 {
 	FRESULT res;
 	DIR dir;
 	FILINFO fno;
+	uint8_t fcount = 0;
 
 	/* Open the directory */
 	res = f_opendir(&dir, path);
@@ -443,9 +454,10 @@ static FRESULT GetCSVFilesCount(char* path, uint8_t* count_files)
 			/* Break on error or end of dir */
 			if (res != FR_OK || fno.fname[0] == 0) break;
 			/* If file name contains 'LOG' */
-			if(strstr(fno.fname, "LOG") != NULL) *count_files += 1;
+			if(strstr(fno.fname, "LOG") != NULL) fcount += 1;
 		}
 	}
+	*files_count = fcount;
 	res = f_closedir(&dir);
 	return res;
 }
@@ -485,7 +497,6 @@ FRESULT DR_ScanFilesOnDisk(void)
 		free(DR.LOG_files);
 		DR.LOG_files = NULL;
 		DR.scan_files = false;
-		DR.files_count = 0;
 	}
 	// --------------------------------------------------- //
 
@@ -511,4 +522,3 @@ FRESULT DR_ScanFilesOnDisk(void)
 
 	return fr;
 }
-

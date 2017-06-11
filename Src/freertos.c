@@ -65,6 +65,11 @@ void MX_FREERTOS_Init(void) {
 	DL_Semaphore = osSemaphoreCreate(osSemaphore(DL_Event), 1U);
 	osSemaphoreWait(DL_Semaphore, 0U);
 
+	/* Create binary semaphore for DR thread */
+	osSemaphoreDef(DR_Event);
+	DR_Semaphore = osSemaphoreCreate(osSemaphore(DR_Event), 1U);
+	osSemaphoreWait(DR_Semaphore, 0U);
+
 	/* Create binary semaphore for GUI thread */
 	osSemaphoreDef(GUI_Event);
 	GUI_Semaphore = osSemaphoreCreate(osSemaphore(GUI_Event), 1U);
@@ -86,6 +91,10 @@ void MX_FREERTOS_Init(void) {
 	/* Create & start DL thread */
 	osThreadDef(DLThread, DL_Thread, osPriorityHigh, 0, configMINIMAL_STACK_SIZE*8);
 	DLThreadHandle = osThreadCreate (osThread(DLThread), NULL);
+
+	/* Create & start DR thread */
+	osThreadDef(DRThread, DR_Thread, osPriorityHigh, 0, configMINIMAL_STACK_SIZE*8);
+	DRThreadHandle = osThreadCreate (osThread(DRThread), NULL);
 
 }
 

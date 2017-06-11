@@ -111,8 +111,9 @@
   #error Virtual screens and multiple buffers are not allowed!
 #endif
 
-#define LCD_LAYER0_FRAME_BUFFER  ((uint32_t)0xD0200000)
-#define LCD_LAYER1_FRAME_BUFFER  ((uint32_t)0xD0400000)
+/* 2048kB for each layer in SDRAM */
+#define LCD_LAYER0_FRAME_BUFFER  ((uint32_t)0xD0400000)
+#define LCD_LAYER1_FRAME_BUFFER  ((uint32_t)0xD0600000)
 
 /**
 * @}
