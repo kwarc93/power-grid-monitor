@@ -15,13 +15,14 @@
 #include "dsp_calculations.h"
 
 /* ------------- */
-struct disk_t
+extern struct disk_t
 {
 	FATFS disk;        						/* File system object for USB disk logical drive */
 	volatile _Bool disk_connected;			/* Disc connected indicator flag */
 }USB;
 /* ------------- */
-struct datalogger_t
+
+extern struct datalogger_t
 {
 	FIL file;							/* File objects */
 	FRESULT res;						/* FatFs function common result code */
@@ -35,19 +36,24 @@ struct datalogger_t
 
 }DL;
 /* ---------- */
-#define START_COLUMN	(6)
-#define OFFSET			(17)
-struct datareader_t
+
+#define START_COLUMN	(6)				/* Begining of FFT data in .csv file */
+#define OFFSET			(17)			/* Number of FFT bins */
+extern struct datareader_t
 {
 	FIL file;							/* File objects */
 	FRESULT res;						/* FatFs function common result code */
 	char filename[13];					/* File name */
 	char data_buffer[512];
 	_Bool data_alloc;
+	_Bool scan_files;
+	FILINFO *LOG_files;
+	uint8_t files_count;
 	char delimiter;
 	uint32_t lines_nr;
 	float32_t *FFT_U, *FFT_I;			/* Arrays of complex numbers (real, imag, real, imag, ...) */
 }DR;
+
 /* ---------- */
 
 void DL_Init(void);
@@ -63,6 +69,7 @@ void DL_TestApplication(void);
 void DL_WriteTimeTest(void);
 
 void DR_Init(void);
-void DR_GetNumberOfLines(FIL *file, uint32_t *n);
+void DR_GetNumberOfLines(FIL *file, uint32_t *lines_count);
 void DR_ReadFFT(FIL *file, uint8_t harmonic);
+FRESULT DR_ScanFilesOnDisk(void);
 #endif /* __DATALOGGER_H_ */

@@ -18,18 +18,26 @@ struct {
 	uint8_t MP;
 } WM_ItemFlag;
 
-WM_HWIN hMpage;
-WM_HWIN hCB_FIR, hCB_LOG, hCB_WIN;
-WM_HWIN hB1;
 WM_HWIN hMW, hMP0, hMP1, hMP2, hMP3;
-WM_HWIN hText_URMS, hText_IRMS, hText_Freq, hText_PF, hText_DPF, hText_P, hText_Q, hText_S, hText_ZL;
-WM_HWIN hText_Time, hText_Date, hText_Uf, hText_If, hText12, hTextTHD_U, hTextTHD_I;
-WM_HWIN hGraph0, hGraph1;
-WM_HWIN hDd1, hDd2, hDd_Uf, hDd_If;
 WM_HWIN hDateTime;
+WM_HWIN hChooseFile;
 WM_HWIN hCal;
-WM_HWIN hMessage;
-WM_HWIN hHH, hMM;
+
+MULTIPAGE_Handle hMpage;
+CHECKBOX_Handle hCB_FIR, hCB_LOG, hCB_WIN;
+BUTTON_Handle hB1;
+
+TEXT_Handle hText_URMS, hText_IRMS, hText_Freq, hText_PF, hText_DPF, hText_P, hText_Q, hText_S, hText_ZL;
+TEXT_Handle hText_Time, hText_Date, hText_Uf, hText_If, hText12, hTextTHD_U, hTextTHD_I, hText_ZG;
+
+GRAPH_Handle hGraph0, hGraph1;
+DROPDOWN_Handle hDd1, hDd2, hDd_Uf, hDd_If;
+
+TREEVIEW_Handle hTreeView;
+TREEVIEW_ITEM_Handle hMainDir;
+TEXT_Handle hFileName;
+
+SPINBOX_Handle hHH, hMM;
 CALENDAR_DATE EMWIN_date;
 
 GRAPH_DATA_Handle hData_U, hData_I, hData_Uf, hData_If;
@@ -44,5 +52,6 @@ WM_HWIN CreateHarmonics(void);
 WM_HWIN CreateImpedances(void);
 WM_HWIN CreateSettings(void);
 WM_HWIN CreateSetDateTime(void);
+WM_HWIN CreateChooseFile(void);
 
 #endif /* __WM_MYDEFINES_H_ */
