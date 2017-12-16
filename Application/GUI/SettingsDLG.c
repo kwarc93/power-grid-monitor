@@ -19,12 +19,10 @@
  */
 
 // USER START (Optionally insert additional includes)
-#include "WM_MyDefines.h"
-#include "datalogger.h"
-#include "pga.h"
-#include "rtc.h"
-// USER END
-
+#include <GUI/WM_MyDefines.h>
+#include <Modules/datalogger.h>
+#include <Peripherals/pga.h>
+#include <Peripherals/rtc.h>
 #include "DIALOG.h"
 /*********************************************************************
  *
@@ -64,20 +62,20 @@
  *       _aDialogCreate
  */
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
-		  { WINDOW_CreateIndirect, "Settings", ID_WINDOW_0, 0, 0, 222, 270, 0, 0x0, 0 },
-		  { CHECKBOX_CreateIndirect, "Filter", ID_CHECKBOX_0, 12, 14, 180, 20, 0, 0x0, 0 },
-		  { TEXT_CreateIndirect, "12:00:00", ID_TEXT_0, 42, 246, 60, 20, 0, 0x0, 0 },
-		  { BUTTON_CreateIndirect, "Set date & time", ID_BUTTON_0, 12, 210, 100, 24, 0, 0x0, 0 },
-		  { CHECKBOX_CreateIndirect, "Logger", ID_CHECKBOX_1, 12, 78, 100, 20, 0, 0x0, 0 },
-		  { TEXT_CreateIndirect, "01-11-2016", ID_TEXT_1, 116, 246, 70, 20, 0, 0x0, 0 },
-		  { TEXT_CreateIndirect, "PGA gain:", ID_TEXT_2, 12, 111, 80, 20, 0, 0x0, 0 },
-		  { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_0, 128, 110, 80, 21, 0, 0x0, 0 },
-		  { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_1, 128, 140, 80, 21, 0, 0x0, 0 },
-		  { TEXT_CreateIndirect, "Logging interval:", ID_TEXT_3, 12, 142, 100, 20, 0, 0x64, 0 },
-		  { BUTTON_CreateIndirect, "Save waveforms", ID_BUTTON_1, 12, 175, 100, 24, 0, 0x0, 0 },
-		  { CHECKBOX_CreateIndirect, "window", ID_CHECKBOX_2, 12, 46, 130, 20, 0, 0x0, 0 },
-		// USER START (Optionally insert additional widgets)
-		// USER END
+    { WINDOW_CreateIndirect, "Settings", ID_WINDOW_0, 0, 0, 222, 270, 0, 0x0, 0 },
+    { CHECKBOX_CreateIndirect, "Filter", ID_CHECKBOX_0, 12, 14, 180, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "12:00:00", ID_TEXT_0, 42, 246, 60, 20, 0, 0x0, 0 },
+    { BUTTON_CreateIndirect, "Set date & time", ID_BUTTON_0, 12, 210, 100, 24, 0, 0x0, 0 },
+    { CHECKBOX_CreateIndirect, "Logger", ID_CHECKBOX_1, 12, 78, 100, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "01-11-2016", ID_TEXT_1, 116, 246, 70, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "PGA gain:", ID_TEXT_2, 12, 111, 80, 20, 0, 0x0, 0 },
+    { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_0, 128, 110, 80, 21, 0, 0x0, 0 },
+    { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_1, 128, 140, 80, 21, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Logging interval:", ID_TEXT_3, 12, 142, 100, 20, 0, 0x64, 0 },
+    { BUTTON_CreateIndirect, "Save waveforms", ID_BUTTON_1, 12, 175, 100, 24, 0, 0x0, 0 },
+    { CHECKBOX_CreateIndirect, "window", ID_CHECKBOX_2, 12, 46, 130, 20, 0, 0x0, 0 },
+    // USER START (Optionally insert additional widgets)
+    // USER END
 };
 
 /*********************************************************************
@@ -95,274 +93,274 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
  *       _cbDialog
  */
 static void _cbDialog(WM_MESSAGE * pMsg) {
-	WM_HWIN hItem;
-	int     NCode;
-	int     Id;
-	// USER START (Optionally insert additional variables)
-	// USER END
+  WM_HWIN hItem;
+  int     NCode;
+  int     Id;
+  // USER START (Optionally insert additional variables)
+  // USER END
 
-	switch (pMsg->MsgId) {
-	case WM_INIT_DIALOG:
-		//
-		// Initialization of 'Filter'
-		//
-		hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
-		hCB_FIR = hItem;
-		CHECKBOX_SetText(hItem, "FIR lowpass filter");
-		CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
-	    //
-	    // Initialization of 'window'
-	    //
-	    hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_2);
-	    hCB_WIN = hItem;
-	    CHECKBOX_SetText(hItem, "Hanning window");
-	    CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
-		//
-		// Initialization of 'Time'
-		//
-		hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
-		hText_Time = hItem;
-		TEXT_SetFont(hItem, GUI_FONT_16_1);
-		//
-		// Initialization of 'Date'
-		//
-		hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
-		hText_Date = hItem;
-		TEXT_SetFont(hItem, GUI_FONT_16_1);
-		//
-		// Initialization of 'Logger'
-		//
-		hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_1);
-		hCB_LOG = hItem;
-		CHECKBOX_SetText(hItem, "Data logger");
-		CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
-	    //
-	    // Initialization of 'PGA gain'
-	    //
-	    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
-	    TEXT_SetFont(hItem, GUI_FONT_16_1);
-	    //
-	    // Initialization of 'DD_gain'
-	    //
-	    hItem = WM_GetDialogItem(pMsg->hWin, ID_DROPDOWN_0);
-	    hDd1 = hItem;
-	    DROPDOWN_SetFont(hItem, GUI_FONT_16B_1);
-	    DROPDOWN_SetListHeight(hItem, 64 + 2);
-	    DROPDOWN_AddString(hItem, "x1");
-	    DROPDOWN_AddString(hItem, "x2");
-	    DROPDOWN_AddString(hItem, "x4");
-	    DROPDOWN_AddString(hItem, "x5");
-	    DROPDOWN_AddString(hItem, "x8");
-	    DROPDOWN_AddString(hItem, "x10");
-	    DROPDOWN_AddString(hItem, "x16");
-	    DROPDOWN_AddString(hItem, "x32");
-	    DROPDOWN_SetAutoScroll(hItem, 1);
-	    DROPDOWN_SetScrollbarWidth(hItem,19);
-	    //
-	    // Initialization of 'DD_interval'
-	    //
-	    hItem = WM_GetDialogItem(pMsg->hWin, ID_DROPDOWN_1);
-	    DROPDOWN_SetFont(hItem, GUI_FONT_16B_1);
-	    DROPDOWN_SetListHeight(hItem, 64 + 2);
-	    DROPDOWN_AddString(hItem, "1min");
-	    DROPDOWN_AddString(hItem, "1s");
-	    DROPDOWN_AddString(hItem, "0.5s");
-	    DROPDOWN_AddString(hItem, "0.25s");
-	    DROPDOWN_SetSel(hItem, 1);
-	    hDd2 = hItem;
-	    //
-	    // Initialization of 'Logging interval'
-	    //
-	    hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
-	    TEXT_SetFont(hItem, GUI_FONT_16_1);
-	    //
-	    // Initialization of 'Save w-forms'
-	    //
-	    hItem = WM_GetDialogItem(pMsg->hWin, ID_BUTTON_1);
-	    BUTTON_SetFont(hItem, GUI_FONT_13_1);
-	    //
-	    // Initialization of 'Set time'
-	    //
-	    hItem = WM_GetDialogItem(pMsg->hWin, ID_BUTTON_0);
-	    hB1 = hItem;
-	    BUTTON_SetFont(hItem, GUI_FONT_13_1);
-		// USER START (Optionally insert additional code for further widget initialization)
-		CHECKBOX_SetState(hCB_FIR,WM_ItemFlag.CB_FIR = 1);
-		CHECKBOX_SetState(hCB_LOG,WM_ItemFlag.CB_LOG = 0);
-		CHECKBOX_SetState(hCB_WIN,WM_ItemFlag.CB_WIN = 1);
-		DSP_apply_window = WM_ItemFlag.CB_WIN;
-		// USER END
-		break;
-	case WM_NOTIFY_PARENT:
-		Id    = WM_GetId(pMsg->hWinSrc);
-		NCode = pMsg->Data.v;
-		switch(Id) {
-		case ID_CHECKBOX_0: // Notifications sent by 'Filter'
-			switch(NCode) {
-			case WM_NOTIFICATION_CLICKED:
-				// USER START (Optionally insert code for reacting on notification message)
-				WM_ItemFlag.CB_FIR ^= 1;
-				// USER END
-				break;
-			case WM_NOTIFICATION_RELEASED:
-				// USER START (Optionally insert code for reacting on notification message)
-				// USER END
-				break;
-			case WM_NOTIFICATION_VALUE_CHANGED:
-				// USER START (Optionally insert code for reacting on notification message)
-				// USER END
-				break;
-				// USER START (Optionally insert additional code for further notification handling)
-				// USER END
-			}
-			break;
-		    case ID_CHECKBOX_2: // Notifications sent by 'window'
-		      switch(NCode) {
-		      case WM_NOTIFICATION_CLICKED:
-		        // USER START (Optionally insert code for reacting on notification message)
-		    	  WM_ItemFlag.CB_WIN ^= 1;
-		    	  DSP_apply_window = WM_ItemFlag.CB_WIN;
-		        // USER END
-		        break;
-		      case WM_NOTIFICATION_RELEASED:
-		        // USER START (Optionally insert code for reacting on notification message)
-		        // USER END
-		        break;
-		      case WM_NOTIFICATION_VALUE_CHANGED:
-		        // USER START (Optionally insert code for reacting on notification message)
-		        // USER END
-		        break;
-		      // USER START (Optionally insert additional code for further notification handling)
-		      // USER END
-		      }
-		      break;
-			case ID_BUTTON_0: // Notifications sent by 'Set time'
-				switch(NCode) {
-				case WM_NOTIFICATION_CLICKED:
-					// USER START (Optionally insert code for reacting on notification message)
-					// USER END
-					break;
-				case WM_NOTIFICATION_RELEASED:
-					// USER START (Optionally insert code for reacting on notification message)
-					if(hDateTime == 0)
-						{
-							hDateTime = CreateSetDateTime();
-							hCal = CALENDAR_Create(hDateTime,26,82,rtc_date.Year+2000,rtc_date.Month,rtc_date.Date,2,64,0);
-							WM_DisableWindow(hMW);
-							WM_DisableWindow(hMpage);
-						}
-					// USER END
-					break;
-					// USER START (Optionally insert additional code for further notification handling)
-					// USER END
-				}
-				break;
-				case ID_CHECKBOX_1: // Notifications sent by 'Logger'
-					switch(NCode) {
-					case WM_NOTIFICATION_CLICKED:
-						// USER START (Optionally insert code for reacting on notification message)
-						if(USB.disk_connected)
-						{
-							if(WM_ItemFlag.CB_LOG)
-							{
-								WM_ItemFlag.CB_LOG = 0;
-								WM_EnableWindow(hDd2);
-								DL_CloseFile();
-							}
-							else
-							{
-								DL_CreateFile();
-								WM_DisableWindow(hDd2);
-								WM_ItemFlag.CB_LOG = 1;
-							}
-						}
-						else
-						{
-							CHECKBOX_SetState(hCB_LOG,0);
-						}
-						// USER END
-						break;
-					case WM_NOTIFICATION_RELEASED:
-						// USER START (Optionally insert code for reacting on notification message)
-						// USER END
-						break;
-					case WM_NOTIFICATION_VALUE_CHANGED:
-						// USER START (Optionally insert code for reacting on notification message)
-						// USER END
-						break;
-						// USER START (Optionally insert additional code for further notification handling)
-						// USER END
-					}
-					break;
-				case ID_DROPDOWN_0: // Notifications sent by 'Dropdown'
-				  switch(NCode) {
-				  case WM_NOTIFICATION_CLICKED:
-					// USER START (Optionally insert code for reacting on notification message)
-					// USER END
-					break;
-				  case WM_NOTIFICATION_RELEASED:
-					// USER START (Optionally insert code for reacting on notification message)
-					// USER END
-					break;
-				  case WM_NOTIFICATION_SEL_CHANGED:
-					// USER START (Optionally insert code for reacting on notification message)
-					  Id = DROPDOWN_GetSel(hDd1);
-					  PGA_SetGain((uint8_t)Id);
-					  GRAPH_SCALE_SetFactor(hScale0yI,0.632f/pga_gain);
-					  GRAPH_SCALE_SetFactor(hScale1yI,0.25f/pga_gain);
-					  if(pga_gain > 2)	GRAPH_SCALE_SetNumDecs(hScale0yI,1);
-					  else				GRAPH_SCALE_SetNumDecs(hScale0yI,0);
-					// USER END
-					break;
-				  // USER START (Optionally insert additional code for further notification handling)
-				  // USER END
-				  }
-				  break;
-				case ID_DROPDOWN_1: // Notifications sent by 'Dropdown'
-				  switch(NCode) {
-				  case WM_NOTIFICATION_CLICKED:
-					// USER START (Optionally insert code for reacting on notification message)
-					// USER END
-					break;
-				  case WM_NOTIFICATION_RELEASED:
-					// USER START (Optionally insert code for reacting on notification message)
-					// USER END
-					break;
-				  case WM_NOTIFICATION_SEL_CHANGED:
-					// USER START (Optionally insert code for reacting on notification message)
-					  DL.interval_div_idx = DROPDOWN_GetSel(hDd2);
-					// USER END
-					break;
-				  // USER START (Optionally insert additional code for further notification handling)
-				  // USER END
-				  }
-				  break;
-				case ID_BUTTON_1: // Notifications sent by 'Save w-forms'
-				  switch(NCode) {
-				  case WM_NOTIFICATION_CLICKED:
-					// USER START (Optionally insert code for reacting on notification message)
-					// USER END
-					break;
-				  case WM_NOTIFICATION_RELEASED:
-					// USER START (Optionally insert code for reacting on notification message)
-					if(USB.disk_connected)	DL.save_waveforms = true;
-					// USER END
-					break;
-				  // USER START (Optionally insert additional code for further notification handling)
-				  // USER END
-				  }
-				  break;
-				// USER START (Optionally insert additional code for further Ids)
-				// USER END
+  switch (pMsg->MsgId) {
+    case WM_INIT_DIALOG:
+      //
+      // Initialization of 'Filter'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
+      hCB_FIR = hItem;
+      CHECKBOX_SetText(hItem, "FIR lowpass filter");
+      CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
+      //
+      // Initialization of 'window'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_2);
+      hCB_WIN = hItem;
+      CHECKBOX_SetText(hItem, "Hanning window");
+      CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
+      //
+      // Initialization of 'Time'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
+      hText_Time = hItem;
+      TEXT_SetFont(hItem, GUI_FONT_16_1);
+      //
+      // Initialization of 'Date'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
+      hText_Date = hItem;
+      TEXT_SetFont(hItem, GUI_FONT_16_1);
+      //
+      // Initialization of 'Logger'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_1);
+      hCB_LOG = hItem;
+      CHECKBOX_SetText(hItem, "Data logger");
+      CHECKBOX_SetFont(hItem, GUI_FONT_16_1);
+      //
+      // Initialization of 'PGA gain'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
+      TEXT_SetFont(hItem, GUI_FONT_16_1);
+      //
+      // Initialization of 'DD_gain'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_DROPDOWN_0);
+      hDd1 = hItem;
+      DROPDOWN_SetFont(hItem, GUI_FONT_16B_1);
+      DROPDOWN_SetListHeight(hItem, 64 + 2);
+      DROPDOWN_AddString(hItem, "x1");
+      DROPDOWN_AddString(hItem, "x2");
+      DROPDOWN_AddString(hItem, "x4");
+      DROPDOWN_AddString(hItem, "x5");
+      DROPDOWN_AddString(hItem, "x8");
+      DROPDOWN_AddString(hItem, "x10");
+      DROPDOWN_AddString(hItem, "x16");
+      DROPDOWN_AddString(hItem, "x32");
+      DROPDOWN_SetAutoScroll(hItem, 1);
+      DROPDOWN_SetScrollbarWidth(hItem,19);
+      //
+      // Initialization of 'DD_interval'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_DROPDOWN_1);
+      DROPDOWN_SetFont(hItem, GUI_FONT_16B_1);
+      DROPDOWN_SetListHeight(hItem, 64 + 2);
+      DROPDOWN_AddString(hItem, "1min");
+      DROPDOWN_AddString(hItem, "1s");
+      DROPDOWN_AddString(hItem, "0.5s");
+      DROPDOWN_AddString(hItem, "0.25s");
+      DROPDOWN_SetSel(hItem, 1);
+      hDd2 = hItem;
+      //
+      // Initialization of 'Logging interval'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
+      TEXT_SetFont(hItem, GUI_FONT_16_1);
+      //
+      // Initialization of 'Save w-forms'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_BUTTON_1);
+      BUTTON_SetFont(hItem, GUI_FONT_13_1);
+      //
+      // Initialization of 'Set time'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_BUTTON_0);
+      hB1 = hItem;
+      BUTTON_SetFont(hItem, GUI_FONT_13_1);
+      // USER START (Optionally insert additional code for further widget initialization)
+      CHECKBOX_SetState(hCB_FIR,WM_ItemFlag.CB_FIR = 1);
+      CHECKBOX_SetState(hCB_LOG,WM_ItemFlag.CB_LOG = 0);
+      CHECKBOX_SetState(hCB_WIN,WM_ItemFlag.CB_WIN = 1);
+      DSP_apply_window = WM_ItemFlag.CB_WIN;
+      // USER END
+      break;
+    case WM_NOTIFY_PARENT:
+      Id    = WM_GetId(pMsg->hWinSrc);
+      NCode = pMsg->Data.v;
+      switch(Id) {
+        case ID_CHECKBOX_0: // Notifications sent by 'Filter'
+          switch(NCode) {
+            case WM_NOTIFICATION_CLICKED:
+              // USER START (Optionally insert code for reacting on notification message)
+              WM_ItemFlag.CB_FIR ^= 1;
+              // USER END
+              break;
+            case WM_NOTIFICATION_RELEASED:
+              // USER START (Optionally insert code for reacting on notification message)
+              // USER END
+              break;
+            case WM_NOTIFICATION_VALUE_CHANGED:
+              // USER START (Optionally insert code for reacting on notification message)
+              // USER END
+              break;
+              // USER START (Optionally insert additional code for further notification handling)
+              // USER END
+          }
+          break;
+            case ID_CHECKBOX_2: // Notifications sent by 'window'
+              switch(NCode) {
+                case WM_NOTIFICATION_CLICKED:
+                  // USER START (Optionally insert code for reacting on notification message)
+                  WM_ItemFlag.CB_WIN ^= 1;
+                  DSP_apply_window = WM_ItemFlag.CB_WIN;
+                  // USER END
+                  break;
+                case WM_NOTIFICATION_RELEASED:
+                  // USER START (Optionally insert code for reacting on notification message)
+                  // USER END
+                  break;
+                case WM_NOTIFICATION_VALUE_CHANGED:
+                  // USER START (Optionally insert code for reacting on notification message)
+                  // USER END
+                  break;
+                  // USER START (Optionally insert additional code for further notification handling)
+                  // USER END
+              }
+              break;
+                case ID_BUTTON_0: // Notifications sent by 'Set time'
+                  switch(NCode) {
+                    case WM_NOTIFICATION_CLICKED:
+                      // USER START (Optionally insert code for reacting on notification message)
+                      // USER END
+                      break;
+                    case WM_NOTIFICATION_RELEASED:
+                      // USER START (Optionally insert code for reacting on notification message)
+                      if(hDateTime == 0)
+                      {
+                        hDateTime = CreateSetDateTime();
+                        hCal = CALENDAR_Create(hDateTime,26,82,rtc_date.Year+2000,rtc_date.Month,rtc_date.Date,2,64,0);
+                        WM_DisableWindow(hMW);
+                        WM_DisableWindow(hMpage);
+                      }
+                      // USER END
+                      break;
+                      // USER START (Optionally insert additional code for further notification handling)
+                      // USER END
+                  }
+                  break;
+                    case ID_CHECKBOX_1: // Notifications sent by 'Logger'
+                      switch(NCode) {
+                        case WM_NOTIFICATION_CLICKED:
+                          // USER START (Optionally insert code for reacting on notification message)
+                          if(USB.disk_connected)
+                          {
+                            if(WM_ItemFlag.CB_LOG)
+                            {
+                              WM_ItemFlag.CB_LOG = 0;
+                              WM_EnableWindow(hDd2);
+                              DL_CloseFile();
+                            }
+                            else
+                            {
+                              DL_CreateFile();
+                              WM_DisableWindow(hDd2);
+                              WM_ItemFlag.CB_LOG = 1;
+                            }
+                          }
+                          else
+                          {
+                            CHECKBOX_SetState(hCB_LOG,0);
+                          }
+                          // USER END
+                          break;
+                        case WM_NOTIFICATION_RELEASED:
+                          // USER START (Optionally insert code for reacting on notification message)
+                          // USER END
+                          break;
+                        case WM_NOTIFICATION_VALUE_CHANGED:
+                          // USER START (Optionally insert code for reacting on notification message)
+                          // USER END
+                          break;
+                          // USER START (Optionally insert additional code for further notification handling)
+                          // USER END
+                      }
+                      break;
+                        case ID_DROPDOWN_0: // Notifications sent by 'Dropdown'
+                          switch(NCode) {
+                            case WM_NOTIFICATION_CLICKED:
+                              // USER START (Optionally insert code for reacting on notification message)
+                              // USER END
+                              break;
+                            case WM_NOTIFICATION_RELEASED:
+                              // USER START (Optionally insert code for reacting on notification message)
+                              // USER END
+                              break;
+                            case WM_NOTIFICATION_SEL_CHANGED:
+                              // USER START (Optionally insert code for reacting on notification message)
+                              Id = DROPDOWN_GetSel(hDd1);
+                              PGA_SetGain((uint8_t)Id);
+                              GRAPH_SCALE_SetFactor(hScale0yI,0.632f/pga_gain);
+                              GRAPH_SCALE_SetFactor(hScale1yI,0.25f/pga_gain);
+                              if(pga_gain > 2)	GRAPH_SCALE_SetNumDecs(hScale0yI,1);
+                              else				GRAPH_SCALE_SetNumDecs(hScale0yI,0);
+                              // USER END
+                              break;
+                              // USER START (Optionally insert additional code for further notification handling)
+                              // USER END
+                          }
+                          break;
+                            case ID_DROPDOWN_1: // Notifications sent by 'Dropdown'
+                              switch(NCode) {
+                                case WM_NOTIFICATION_CLICKED:
+                                  // USER START (Optionally insert code for reacting on notification message)
+                                  // USER END
+                                  break;
+                                case WM_NOTIFICATION_RELEASED:
+                                  // USER START (Optionally insert code for reacting on notification message)
+                                  // USER END
+                                  break;
+                                case WM_NOTIFICATION_SEL_CHANGED:
+                                  // USER START (Optionally insert code for reacting on notification message)
+                                  DL.interval_div_idx = DROPDOWN_GetSel(hDd2);
+                                  // USER END
+                                  break;
+                                  // USER START (Optionally insert additional code for further notification handling)
+                                  // USER END
+                              }
+                              break;
+                                case ID_BUTTON_1: // Notifications sent by 'Save w-forms'
+                                  switch(NCode) {
+                                    case WM_NOTIFICATION_CLICKED:
+                                      // USER START (Optionally insert code for reacting on notification message)
+                                      // USER END
+                                      break;
+                                    case WM_NOTIFICATION_RELEASED:
+                                      // USER START (Optionally insert code for reacting on notification message)
+                                      if(USB.disk_connected)	DL.save_waveforms = true;
+                                      // USER END
+                                      break;
+                                      // USER START (Optionally insert additional code for further notification handling)
+                                      // USER END
+                                  }
+                                  break;
+                                  // USER START (Optionally insert additional code for further Ids)
+                                  // USER END
 
-		}
-		break;
-		// USER START (Optionally insert additional message handling)
-		// USER END
-		default:
-			WM_DefaultProc(pMsg);
-			break;
-	}
+      }
+      break;
+      // USER START (Optionally insert additional message handling)
+      // USER END
+        default:
+          WM_DefaultProc(pMsg);
+          break;
+  }
 }
 
 /*********************************************************************
@@ -376,10 +374,10 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
  *       CreateSettings
  */
 WM_HWIN CreateSettings(void) {
-	WM_HWIN hWin;
+  WM_HWIN hWin;
 
-	hWin = GUI_CreateDialogBox(_aDialogCreate, GUI_COUNTOF(_aDialogCreate), _cbDialog, WM_HBKWIN, 0, 0);
-	return hWin;
+  hWin = GUI_CreateDialogBox(_aDialogCreate, GUI_COUNTOF(_aDialogCreate), _cbDialog, WM_HBKWIN, 0, 0);
+  return hWin;
 }
 
 // USER START (Optionally insert additional public code)

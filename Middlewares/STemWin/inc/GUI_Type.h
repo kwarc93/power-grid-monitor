@@ -58,8 +58,8 @@ Attention : Do not modify this file ! If you do, you will not
 #ifndef  GUITYPE_H_INCLUDED
 #define  GUITYPE_H_INCLUDED
 
+#include <GUI/GUIConf.h>
 #include "LCD.h"
-#include "GUIConf.h"
 
 /*********************************************************************
 *
@@ -184,7 +184,7 @@ typedef struct {
 
 /* Translation list. Translates a character code into up to 2
    indices of images to display on top of each other;
-   'á' -> index('a'), index('´') */
+   'ï¿½' -> index('a'), index('ï¿½') */
 typedef struct {
   I16P c0;
   I16P c1;

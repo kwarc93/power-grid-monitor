@@ -41,21 +41,20 @@
  ******************************************************************************
  */
 /* Includes ------------------------------------------------------------------*/
+#include <Modules/fatfs.h>
+#include <Modules/usb_host.h>
+#include <Peripherals/adc.h>
+#include <Peripherals/crc.h>
+#include <Peripherals/dma.h>
+#include <Peripherals/fmc.h>
+#include <Peripherals/gpio.h>
+#include <Peripherals/i2c.h>
+#include <Peripherals/rtc.h>
+#include <Peripherals/spi.h>
+#include <Peripherals/tim.h>
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
-#include "adc.h"
-#include "crc.h"
-#include "dma.h"
-#include "fatfs.h"
-#include "i2c.h"
-#include "rtc.h"
-#include "spi.h"
-#include "tim.h"
-#include "usb_host.h"
-#include "gpio.h"
-#include "fmc.h"
-
 #include "tlsf/tlsf.h"
 
 #define CCMRAM	__attribute__((section (".ccmram")))
@@ -63,53 +62,59 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
-void SetupHardware(void);
-void Error_Handler(void);
-void MX_FREERTOS_Init(void);
+void
+SystemClock_Config (void);
+void
+SetupHardware (void);
+void
+Error_Handler (void);
+void
+MX_FREERTOS_Init (void);
 
 /* Heap pool for FreeRTOS */
-uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] CCMRAM;
+uint8_t ucHeap[configTOTAL_HEAP_SIZE] CCMRAM;
 
 /* Heap pool for application */
 #define APP_HEAP_SIZE	(32 * 1024)
-uint8_t appHeap[ APP_HEAP_SIZE ];
+uint8_t appHeap[APP_HEAP_SIZE];
 
-int main(void)
+int
+main (void)
 {
 
   /* MCU Configuration----------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+  HAL_Init ();
 
   /* Configure the system clock */
-  SystemClock_Config();
+  SystemClock_Config ();
 
   /* Init application memory pool */
-  init_memory_pool(APP_HEAP_SIZE, appHeap);
+  init_memory_pool (APP_HEAP_SIZE, appHeap);
 
   /* Initialize all configured peripherals */
-  SetupHardware();
+  SetupHardware ();
 
   /* Call init function for freertos objects (in freertos.c) */
-  MX_FREERTOS_Init();
+  MX_FREERTOS_Init ();
 
   /* Start scheduler */
-  osKernelStart();
+  osKernelStart ();
 
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   while (1)
-    {
+  {
 
-    }
+  }
 
 }
 /** System Clock Configuration
  */
-void SystemClock_Config(void)
+void
+SystemClock_Config (void)
 {
 
   RCC_OscInitTypeDef RCC_OscInitStruct;
@@ -118,13 +123,15 @@ void SystemClock_Config(void)
 
   /**Configure the main internal regulator output voltage
    */
-  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_RCC_PWR_CLK_ENABLE()
+  ;
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /**Initializes the CPU, AHB and APB busses clocks
    */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE
+      | RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -133,63 +140,64 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
+  if (HAL_RCC_OscConfig (&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler ();
+  }
 
   /**Initializes the CPU, AHB and APB busses clocks
    */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-      |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+      | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-    {
-      Error_Handler();
-    }
+  if (HAL_RCC_ClockConfig (&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  {
+    Error_Handler ();
+  }
 
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC|RCC_PERIPHCLK_RTC;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC
+      | RCC_PERIPHCLK_RTC;
   PeriphClkInitStruct.PLLSAI.PLLSAIN = 50;
   PeriphClkInitStruct.PLLSAI.PLLSAIR = 2;
   PeriphClkInitStruct.PLLSAIDivR = RCC_PLLSAIDIVR_2;
   PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
+  if (HAL_RCCEx_PeriphCLKConfig (&PeriphClkInitStruct) != HAL_OK)
+  {
+    Error_Handler ();
+  }
 
   /**Configure the Systick interrupt time
    */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+  HAL_SYSTICK_Config (HAL_RCC_GetHCLKFreq () / 1000);
 
   /**Configure the Systick
    */
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+  HAL_SYSTICK_CLKSourceConfig (SYSTICK_CLKSOURCE_HCLK);
 
   /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0);
+  HAL_NVIC_SetPriority (SysTick_IRQn, 15, 0);
 }
 
-void SetupHardware(void)
+void
+SetupHardware (void)
 {
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_ADC2_Init();
-  MX_CRC_Init();
-  MX_FMC_Init();
-  MX_I2C3_Init();
-  MX_SPI4_Init();
-  MX_SPI5_Init();
-  MX_TIM2_Init();
-  MX_TIM3_Init();
-  MX_RTC_Init();
+  MX_GPIO_Init ();
+  MX_DMA_Init ();
+  MX_ADC1_Init ();
+  MX_ADC2_Init ();
+  MX_CRC_Init ();
+  MX_FMC_Init ();
+  MX_I2C3_Init ();
+  MX_SPI4_Init ();
+  MX_SPI5_Init ();
+  MX_TIM2_Init ();
+  MX_TIM3_Init ();
+  MX_RTC_Init ();
 }
-
 
 /**
  * @brief  Period elapsed callback in non blocking mode
@@ -199,11 +207,13 @@ void SetupHardware(void)
  * @param  htim : TIM handle
  * @retval None
  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void
+HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *htim)
 {
 
-  if (htim->Instance == TIM6) {
-      HAL_IncTick();
+  if (htim->Instance == TIM6)
+  {
+    HAL_IncTick ();
   }
 
 }
@@ -213,13 +223,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  * @param  None
  * @retval None
  */
-void Error_Handler(void)
+void
+Error_Handler (void)
 {
   /* User can add his own implementation to report the HAL error return state */
-  HAL_GPIO_WritePin(GPIOG,LD4_Pin,GPIO_PIN_SET);
-  while(1)
-    {
-    }
+  HAL_GPIO_WritePin (GPIOG, LD4_Pin, GPIO_PIN_SET);
+  while (1)
+  {
+  }
 }
 
 #ifdef USE_FULL_ASSERT
@@ -235,7 +246,7 @@ void assert_failed(uint8_t* file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
-    ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+   ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 
 }

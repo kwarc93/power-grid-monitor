@@ -34,7 +34,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "usbh_conf.h"
+#include <Peripherals/usbh_conf.h>
 
 /** @addtogroup USBH_LIB
   * @{

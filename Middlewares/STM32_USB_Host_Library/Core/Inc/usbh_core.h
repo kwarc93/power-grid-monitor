@@ -34,7 +34,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "usbh_conf.h"
+#include <Peripherals/usbh_conf.h>
 #include "usbh_def.h"
 #include "usbh_ioreq.h"
 #include "usbh_pipes.h"

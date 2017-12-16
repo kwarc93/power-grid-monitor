@@ -8,7 +8,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright © 2016 STMicroelectronics International N.V. 
+  * <h2><center>&copy; Copyright ï¿½ 2016 STMicroelectronics International N.V. 
   * All rights reserved.</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -46,7 +46,7 @@
   */ 
 
 /* Includes ------------------------------------------------------------------*/
-#include "LCDConf.h"
+#include <Peripherals/LCDConf.h>
 #include "GUI_Private.h"
 
 /** @addtogroup STEMWIN_LIBRARY
