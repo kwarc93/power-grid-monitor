@@ -48,8 +48,10 @@ void DSP_Init(void)
 
   /* Start timer2 for ADC triggering */
   HAL_TIM_Base_Start_IT(&htim2);
-  /* Start timer3 for frequency measuring */
-  HAL_TIM_IC_Start(&htim3,TIM_CHANNEL_1);
+  /* Start timer3 for PLL frequency dividing */
+  HAL_TIM_OC_Start(&htim3,TIM_CHANNEL_1);
+  /* Start timer4 for frequency measuring */
+  HAL_TIM_IC_Start(&htim4,TIM_CHANNEL_2);
   /* Start ADC1(master) & ADC2 in dual, double-buffering mode for simultaneous signals acquisition */
   HAL_ADCEx_MultiModeStart_DMA(&hadc1, ADC_Buffer, ADC_BUFFER_LENGTH);
   HAL_ADC_Start_IT(&hadc1);
@@ -166,7 +168,7 @@ void DSP_CalcFrequency(void)
 {
   uint32_t signal_period;
 
-  signal_period = __HAL_TIM_GET_COMPARE(&htim3,TIM_CHANNEL_1);
+  signal_period = __HAL_TIM_GET_COMPARE(&htim4,TIM_CHANNEL_2);
   grid.frequency = (float32_t)((2000000.0F)/signal_period);
 
 }
