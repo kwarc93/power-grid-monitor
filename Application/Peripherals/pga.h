@@ -22,8 +22,8 @@
 #define MCP6S21_CH0			0x00
 
 /* MCP6S21 MACROS */
-#define PGA_CS_LOW()       (PGA_CS_GPIO_Port->BSRR = GPIO_BSRR_BR_4)
-#define PGA_CS_HIGH()      (PGA_CS_GPIO_Port->BSRR = GPIO_BSRR_BS_4)
+#define PGA_CS_LOW()       (PGA_CS_GPIO_Port->BSRR = GPIO_BSRR_BR_6)
+#define PGA_CS_HIGH()      (PGA_CS_GPIO_Port->BSRR = GPIO_BSRR_BS_6)
 
 uint8_t pga_gain;
 enum e_pga_gain {x1,x2,x4,x5,x8,x10,x16,x32};

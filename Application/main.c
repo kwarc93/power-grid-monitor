@@ -190,7 +190,6 @@ SetupHardware(void)
   MX_CRC_Init ();
   MX_FMC_Init ();
   MX_I2C3_Init ();
-  MX_SPI4_Init ();
   MX_SPI5_Init ();
   MX_TIM2_Init ();
   MX_TIM3_Init ();

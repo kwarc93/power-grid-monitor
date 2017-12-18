@@ -226,10 +226,10 @@
 #define NBL0_GPIO_Port GPIOE
 #define NBL1_Pin GPIO_PIN_1
 #define NBL1_GPIO_Port GPIOE
-#define PGA_CS_Pin GPIO_PIN_4
-#define PGA_CS_GPIO_Port GPIOE
-#define PGA_SCK_Pin GPIO_PIN_2
-#define PGA_MOSI_Pin GPIO_PIN_6
+#define PGA_CS_GPIO_Port GPIOF
+#define PGA_CS_Pin GPIO_PIN_6
+#define PGA_SCK_Pin GPIO_PIN_7
+#define PGA_MOSI_Pin GPIO_PIN_9
 /* USER CODE END Private defines */
 
 /**

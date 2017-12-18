@@ -124,6 +124,11 @@ void ili9341_Init(void)
   LCD_Delay(10);
 
   /* Configure LCD */
+
+  // Soft reset
+  ili9341_WriteData(0x01);
+  LCD_Delay(5);
+
   ili9341_WriteReg(0xCA);
   ili9341_WriteData(0xC3);
   ili9341_WriteData(0x08);
