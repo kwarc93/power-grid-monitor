@@ -320,7 +320,7 @@ void DSP_AverageValues(uint8_t avg_number)
   {
     accum.RMS_voltage += grid.RMS_voltage;
     accum.RMS_current += grid.RMS_current;
-//    accum.frequency += grid.frequency;
+    accum.frequency += grid.frequency;
     accum.S += grid.S;
     accum.P += grid.P;
     accum.Q += grid.Q;
@@ -338,7 +338,7 @@ void DSP_AverageValues(uint8_t avg_number)
     /* Copy averaged parameters to its original structure */
     grid.RMS_voltage = accum.RMS_voltage*div;
     grid.RMS_current = accum.RMS_current*div;
-//    grid.frequency = accum.frequency*div;
+    grid.frequency = accum.frequency*div;
     grid.S = accum.S*div;
     grid.P = accum.P*div;
     grid.Q = accum.Q*div;
