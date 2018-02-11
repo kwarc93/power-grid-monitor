@@ -52,6 +52,7 @@ extern "C" {
   void DMA2_Stream2_IRQHandler(void);
   void DMA2_Stream4_IRQHandler(void);
   void OTG_HS_IRQHandler(void);
+  void EXTI15_10_IRQHandler(void);
 
 #ifdef __cplusplus
 }

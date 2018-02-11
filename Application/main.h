@@ -230,6 +230,8 @@
 #define PGA_CS_Pin GPIO_PIN_6
 #define PGA_SCK_Pin GPIO_PIN_7
 #define PGA_MOSI_Pin GPIO_PIN_9
+#define ADC_EXT_TRG_Port GPIOC
+#define ADC_EXT_TRG_Pin GPIO_PIN_11
 /* USER CODE END Private defines */
 
 /**

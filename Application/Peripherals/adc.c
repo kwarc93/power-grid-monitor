@@ -72,7 +72,8 @@ void MX_ADC1_Init(void)
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
-  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T2_TRGO;
+//  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T2_TRGO;
+  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_Ext_IT11;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DMAContinuousRequests = ENABLE;
@@ -156,6 +157,14 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /**ADC1 GPIO Configuration
+    PC11     ------> ADC_EXT_TRIGGER
+    */
+    GPIO_InitStruct.Pin = ADC_EXT_TRG_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    HAL_GPIO_Init(ADC_EXT_TRG_Port, &GPIO_InitStruct);
 
     /* Peripheral DMA init*/
   
@@ -242,6 +251,11 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     PA5     ------> ADC1_IN5 
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5);
+
+    /**ADC1 GPIO Configuration
+    PC11     ------> ADC_EXT_TRIGGER
+    */
+    HAL_GPIO_DeInit(ADC_EXT_TRG_Port, ADC_EXT_TRG_Pin);
 
     /* Peripheral DMA DeInit*/
     HAL_DMA_DeInit(adcHandle->DMA_Handle);
