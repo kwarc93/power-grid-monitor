@@ -266,7 +266,7 @@ void DSP_CalcPower(void)
   }
 
   grid.P = realResult;
-  grid.Q = imagResult;
+  grid.Q = -imagResult;
 }
 /* ----------------------------------------------------------------------
  ** Calculate power factor

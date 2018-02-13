@@ -44,7 +44,7 @@
 #define GET_HARMONIC_R(k)	(CFFT_50HZ_BIN_R*(uint8_t)(k))
 #define GET_HARMONIC_I(k)	(CFFT_50HZ_BIN_I*(uint8_t)(k))
 #define RMS_VOLTAGE_RANGE	((float32_t)(260.0f * 1.254360f))			// [U RMS] * calibr. coeff.
-#define RMS_CURRENT_RANGE	((float32_t)(20.0f * 1.1099479f))			// [I RMS] * calibr. coeff.
+#define RMS_CURRENT_RANGE	((float32_t)(20.0f * 1.377763f))			// [I RMS] * calibr. coeff.
 #define PEAK_VOLTAGE_RANGE	((float32_t)(2.0f*RMS_VOLTAGE_RANGE*SQRT2))	// [U PEAK]
 #define PEAK_CURRENT_RANGE	((float32_t)(2.0f*RMS_CURRENT_RANGE*SQRT2))	// [I PEAK]
 
