@@ -46,7 +46,7 @@ extern "C" {
   /* Exported functions ------------------------------------------------------- */
 
   void SysTick_Handler(void);
-  void ADC_IRQHandler(void);
+  void ADC1_2_IRQHandler(void);
   void RTC_Alarm_IRQHandler(void);
   void TIM6_DAC_IRQHandler(void);
   void DMA2_Stream2_IRQHandler(void);

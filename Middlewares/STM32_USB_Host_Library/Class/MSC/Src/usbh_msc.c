@@ -87,6 +87,7 @@
 /** @defgroup USBH_MSC_CORE_Private_Variables
   * @{
   */ 
+static MSC_HandleTypeDef MSC_handle;
 /**
   * @}
   */ 
@@ -163,7 +164,7 @@ static USBH_StatusTypeDef USBH_MSC_InterfaceInit (USBH_HandleTypeDef *phost)
   {
     USBH_SelectInterface (phost, interface);
     
-    phost->pActiveClass->pData = (MSC_HandleTypeDef *)USBH_malloc (sizeof(MSC_HandleTypeDef));
+    phost->pActiveClass->pData = &MSC_handle;
     MSC_Handle =  (MSC_HandleTypeDef *) phost->pActiveClass->pData;
     
     if(phost->device.CfgDesc.Itf_Desc[phost->device.current_interface].Ep_Desc[0].bEndpointAddress & 0x80)
@@ -252,7 +253,6 @@ USBH_StatusTypeDef USBH_MSC_InterfaceDeInit (USBH_HandleTypeDef *phost)
 
   if(phost->pActiveClass->pData)
   {
-    USBH_free (phost->pActiveClass->pData);
     phost->pActiveClass->pData = 0;
   }
   

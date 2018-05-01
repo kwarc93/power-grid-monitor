@@ -46,12 +46,12 @@
 #include <Peripherals/adc.h>
 #include <Peripherals/crc.h>
 #include <Peripherals/dma.h>
-#include <Peripherals/fmc.h>
 #include <Peripherals/gpio.h>
 #include <Peripherals/i2c.h>
 #include <Peripherals/rtc.h>
 #include <Peripherals/spi.h>
 #include <Peripherals/tim.h>
+#include <stm32f429i_discovery_sdram.h>
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
@@ -75,8 +75,8 @@ MX_FREERTOS_Init(void);
 uint8_t ucHeap[configTOTAL_HEAP_SIZE] CCMRAM;
 
 /* Heap pool for application */
-#define APP_HEAP_SIZE	(32 * 1024)
-uint8_t appHeap[APP_HEAP_SIZE];
+#define APP_HEAP_SIZE	(4096 * 1024)
+uint32_t appHeap[APP_HEAP_SIZE / sizeof(uint32_t)] SDRAM;
 
 int
 main(void)
@@ -90,11 +90,12 @@ main(void)
   /* Configure the system clock */
   SystemClock_Config ();
 
-  /* Init application memory pool */
-  init_memory_pool (APP_HEAP_SIZE, appHeap);
-
   /* Initialize all configured peripherals */
   SetupHardware ();
+
+  /* Init application memory pool */
+  if (!init_memory_pool (APP_HEAP_SIZE, appHeap))
+	  Error_Handler ();
 
   /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init ();
@@ -188,13 +189,13 @@ SetupHardware(void)
   MX_ADC1_Init ();
   MX_ADC2_Init ();
   MX_CRC_Init ();
-  MX_FMC_Init ();
   MX_I2C3_Init ();
   MX_SPI5_Init ();
   MX_TIM2_Init ();
   MX_TIM3_Init ();
   MX_TIM4_Init ();
   MX_RTC_Init ();
+  BSP_SDRAM_Init();
 }
 
 /**
@@ -226,6 +227,7 @@ Error_Handler(void)
 {
   /* User can add his own implementation to report the HAL error return state */
   HAL_GPIO_WritePin (GPIOG, LD4_Pin, GPIO_PIN_SET);
+  asm volatile ("BKPT 0");
   while (1)
   {
   }

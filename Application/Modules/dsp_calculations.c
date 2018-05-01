@@ -301,9 +301,9 @@ void DSP_CalcLoadImpedance(void)
 void DSP_GetLoadCharacter(void)
 {
   if(grid.P >= 0.0f && grid.Q >= 0.0f)		{grid.load_type = ind_load;}
-  else if(grid.P < 0.0f && grid.Q >= 0.0f)	{grid.load_type =  ind_generator;}
-  else if(grid.P < 0.0f && grid.Q < 0.0f)		{grid.load_type =  cap_generator;}
-  else if(grid.P >= 0.0f && grid.Q < 0.0f)	{grid.load_type =  cap_load;}
+  else if(grid.P < 0.0f && grid.Q >= 0.0f)	{grid.load_type = ind_generator;}
+  else if(grid.P < 0.0f && grid.Q < 0.0f)	{grid.load_type = cap_generator;}
+  else if(grid.P >= 0.0f && grid.Q < 0.0f)	{grid.load_type = cap_load;}
 }
 /* ----------------------------------------------------------------------
  ** Average all parameters in grid structure

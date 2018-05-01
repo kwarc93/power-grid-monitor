@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include "tlsf/tlsf.h"
 
+#if USE_TLSF
 /*
  * malloc wrapper function
  */
@@ -34,3 +35,4 @@ void *realloc(void *ptr, size_t size)
 {
 	return tlsf_realloc(ptr, size);
 }
+#endif

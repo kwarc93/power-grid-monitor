@@ -12,11 +12,12 @@
 #include <stdbool.h>
 #include "DIALOG.h"
 #include "MESSAGEBOX.h"
+#include "tlsf/tlsf.h"
 
 extern void Error_Handler(void);
 extern uint8_t pga_gain;
 
-struct datareader_t DR  __attribute__((section (".sdram")));
+struct datareader_t DR;
 struct datalogger_t DL;
 struct disk_t USB;
 
@@ -369,9 +370,9 @@ void DR_ReadFFT(FIL *file, uint8_t harmonic)
   // ------------------- free data --------------------- //
   if(DR.data_alloc == true)
   {
-    free(DR.FFT_U);
+    tlsf_free(DR.FFT_U);
     DR.FFT_U = NULL;
-    free(DR.FFT_I);
+    tlsf_free(DR.FFT_I);
     DR.FFT_I = NULL;
     DR.data_alloc = false;
   }
@@ -383,11 +384,11 @@ void DR_ReadFFT(FIL *file, uint8_t harmonic)
   // ------------------ alloc data --------------------- //
   if(DR.data_alloc == false)
   {
-    DR.FFT_U=(float32_t*)malloc(2*DR.lines_nr*sizeof(float32_t));
+    DR.FFT_U=(float32_t*)tlsf_malloc(2*DR.lines_nr*sizeof(float32_t));
     if (DR.FFT_U == NULL) {
       return;
     }
-    DR.FFT_I=(float32_t*)malloc(2*DR.lines_nr*sizeof(float32_t));
+    DR.FFT_I=(float32_t*)tlsf_malloc(2*DR.lines_nr*sizeof(float32_t));
     if (DR.FFT_I == NULL) {
       return;
     }
@@ -494,7 +495,7 @@ FRESULT DR_ScanFilesOnDisk(void)
   // ------------------- free data --------------------- //
   if(DR.scan_files == true)
   {
-    free(DR.LOG_files);
+    tlsf_free(DR.LOG_files);
     DR.LOG_files = NULL;
     DR.scan_files = false;
   }
@@ -508,7 +509,7 @@ FRESULT DR_ScanFilesOnDisk(void)
   // ------------------ alloc data --------------------- //
   if(DR.scan_files == false)
   {
-    DR.LOG_files = (FILINFO *) malloc(DR.files_count * sizeof(FILINFO));
+    DR.LOG_files = (FILINFO *) tlsf_malloc(DR.files_count * sizeof(FILINFO));
     if(DR.LOG_files == NULL)
     {
       Error_Handler();
