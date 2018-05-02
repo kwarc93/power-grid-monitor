@@ -271,7 +271,7 @@ void GUI_Thread(void const *argument)
 
       }
 
-      if(page == 2)
+      if(page == 2 && grid.data_averaged)
       {
         sprintf(string, "%.2f %+.2fi Ohm", grid.src_impedance[0], grid.src_impedance[1]);
         TEXT_SetText(hText_ZS, string);

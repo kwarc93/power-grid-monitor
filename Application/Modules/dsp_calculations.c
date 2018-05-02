@@ -351,8 +351,8 @@ void DSP_AverageValues(uint8_t avg_number)
     grid.DPF = accum.DPF*div;
     grid.THD_voltage = accum.THD_voltage*div;
     grid.THD_current = accum.THD_current*div;
-    grid.load_impedance[0] += accum.load_impedance[0]*div;
-    grid.load_impedance[1] += accum.load_impedance[1]*div;
+    grid.load_impedance[0] = accum.load_impedance[0]*div;
+    grid.load_impedance[1] = accum.load_impedance[1]*div;
 
     /* Indicate that averaging is done, then reset accumulators and counter */
     grid.data_averaged = true;
