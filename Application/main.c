@@ -184,6 +184,7 @@ SystemClock_Config(void)
 void
 SetupHardware(void)
 {
+  BSP_SDRAM_Init();
   MX_GPIO_Init ();
   MX_DMA_Init ();
   MX_ADC1_Init ();
@@ -195,7 +196,6 @@ SetupHardware(void)
   MX_TIM3_Init ();
   MX_TIM4_Init ();
   MX_RTC_Init ();
-  BSP_SDRAM_Init();
 }
 
 /**

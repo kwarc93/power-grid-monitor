@@ -144,8 +144,7 @@ void DR_Thread(void const *argument)
       if(fr == FR_OK)
       {
         DR_ReadFFT(&csv_file, 1);
-        DSP_CalcGridImpedance();
-        grid.grid_impedance = 0.14f;	// example value
+        DSP_CalcSourceImpedance();
       }
 
       fr = f_close(&csv_file);
@@ -270,7 +269,7 @@ void GUI_Thread(void const *argument)
 
       if(page == 2)
       {
-        sprintf(string, "%.2f Ohm", grid.grid_impedance);
+        sprintf(string, "%.2f Ohm", grid.src_impedance[0]);
         TEXT_SetText(hText_ZG, string);
       }
 

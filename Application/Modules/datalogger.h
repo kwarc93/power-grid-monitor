@@ -69,6 +69,7 @@ void DL_TestApplication(void);
 void DL_WriteTimeTest(void);
 
 void DR_Init(void);
+struct datareader_t *DR_GetInstance(void);
 void DR_GetNumberOfLines(FIL *file, uint32_t *lines_count);
 void DR_ReadFFT(FIL *file, uint8_t harmonic);
 FRESULT DR_ScanFilesOnDisk(void);

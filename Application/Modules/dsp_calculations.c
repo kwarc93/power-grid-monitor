@@ -4,12 +4,14 @@
  *  Created on: 09.12.2016
  *      Author: Kwarc
  */
+#include <stdbool.h>
+#include <malloc.h>
 
 #include <Modules/dsp_calculations.h>
+#include <Modules/datalogger.h>
 #include <Peripherals/pga.h>
 #include <RTOS/osThreads.h>
 #include "cmsis_os.h"
-#include <stdbool.h>
 
 static volatile uint8_t DMA_Half_Ready = 0;
 static volatile uint8_t DMA_Full_Ready = 0;
@@ -23,6 +25,7 @@ static uint32_t ADC_Buffer[ADC_BUFFER_LENGTH];
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
+	(void)hadc;
   // When DMA(ADC1 & ADC2) completes first-half transfer to ADC buffer:
   DMA_Half_Ready = 1;
   osSemaphoreRelease(DSP_Semaphore);
@@ -30,6 +33,7 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
+  (void)hadc;
   // When DMA(ADC1 & ADC2) completes second-half transfer to ADC buffer:
   DMA_Full_Ready = 1;
   osSemaphoreRelease(DSP_Semaphore);
@@ -213,11 +217,12 @@ void DSP_CalcFFT(void)
  ** Calculate angle between voltage & current (for fundamental freq.)
  ** WARNING - Function must be called after DSP_CalcFFT() !
  ** ------------------------------------------------------------------- */
-void DSP_CalcDPF(void)
+void DSP_CalcDPF( void )
 {
-  grid.DPF = (float32_t)(atan2f(U.FFT_out_cmplx[CFFT_50HZ_BIN_I], U.FFT_out_cmplx[CFFT_50HZ_BIN_R]) -
-      atan2f(I.FFT_out_cmplx[CFFT_50HZ_BIN_I], I.FFT_out_cmplx[CFFT_50HZ_BIN_R]));
-  grid.DPF = arm_cos_f32(grid.DPF);
+	grid.DPF = (float32_t) (atan2f(
+			U.FFT_out_cmplx[CFFT_50HZ_BIN_R] - I.FFT_out_cmplx[CFFT_50HZ_BIN_R],
+			U.FFT_out_cmplx[CFFT_50HZ_BIN_I] - I.FFT_out_cmplx[CFFT_50HZ_BIN_I] ));
+	grid.DPF = arm_cos_f32( grid.DPF );
 }
 /* ----------------------------------------------------------------------
  ** Calculate THD of voltage & current referred to fundamental 50Hz
@@ -358,92 +363,160 @@ void DSP_AverageValues(uint8_t avg_number)
   }
 }
 
-//static void calcDelta(float32_t *voltage, float32_t *current, float32_t c_threshold)
-//{
-//	// #1 length of current and voltage buffers must be the same!
-//
-//	complex_t v_delta = 0;
-//	complex_t c_delta = 0;
-//
-//	complex_t c_mean0 = 0;
-//	complex_t v_mean0 = 0;
-//	complex_t c_mean1 = 0;
-//	complex_t v_mean1 = 0;
-//
-//	float32_t c_prev_val = 0;
-//	float32_t c_act_val = 0;
-//	float32_t phase_diff = 0;
-//
-//	uint8_t state = 0;
-//	uint32_t num_of_triggers = 0;
-//	uint32_t start_idx = 1;
-//	uint32_t length = DR.lines_nr;
-//
-//	arm_cmplx_mag_f32(&current[0], c_act_val, 1U);
-//
-//	for (uint32_t idx = 0; idx < length; idx+=2)
-//	{
-//
-//		arm_cmplx_mag_f32(&current[idx], c_act_val, 1U);
-//
-//		// State "0"
-//		if((state == 0))
-//		{
-//			c_mean0 = mean(current((start_idx):(idx-1)));
-//			v_mean0 = mean(voltage((start_idx):(idx-1)));
-//			c_mean +=
-//			if(((c_act_val > (c_prev_val + c_threshold)) || (c_act_val < (c_prev_val - c_threshold))))
-//			{
-//			start_idx = idx;
-//			state = 1;
-//			c_prev_val = c_act_val;
-//			if(num_of_triggers != 0)
-//			{
-//				num_of_triggers = num_of_triggers + 1;
-//				phase_diff = angle(v_mean0) - angle(v_mean1);
-//				v_delta(num_of_triggers) = v_mean1*exp(phase_diff*1i)-v_mean0;
-//				c_delta(num_of_triggers) = c_mean1*exp(phase_diff*1i)-c_mean0;
-//			}
-//			}
-//		}
-//
-//
-//		// State "1"
-//		else if(((c_act_val > (c_prev_val + c_threshold)) || (c_act_val < (c_prev_val - c_threshold))) && (state == 1))
-//		{
-//			c_mean1 = mean(current((start_idx):(idx-1)));
-//			v_mean1 = mean(voltage((start_idx):(idx-1)));
-//			start_idx = idx;
-//			state = 0;
-//			c_prev_val = c_act_val;
-//			num_of_triggers = num_of_triggers + 1;
-//			phase_diff = angle(v_mean0) - angle(v_mean1);
-//			v_delta(num_of_triggers) = v_mean1*exp(phase_diff*1i)-v_mean0;
-//			c_delta(num_of_triggers) = c_mean1*exp(phase_diff*1i)-c_mean0;
-//		}
-//		else
-//		{
-//
-//			c_prev_val = c_act_val;
-//		}
-//	}
-//}
+//----------------------------------------------------------------------------------------------------------
 
-void DSP_CalcGridImpedance(void)
+static float32_t expAvg(float32_t sample, float32_t avg, float32_t weight)
 {
-  //Calculate source impedance - method 2
-  //	for h = 1:17
-  //	v = voltage_c(:,h);
-  //	c = current_c(:,h);
-  //	[deltaV, deltaI] = calcDelta(v, c, threshold_2*max(c));
-  //	// Impedance:
-  //	Zs2_k = -(sum(conj(deltaI).*deltaV))/(sum(abs(deltaI).^2));
-  //	Zsh2(h) =  abs(Zs2_k);
-  //	// Coherency:
-  //	C(h) = (abs(sum(conj(deltaI).*deltaV)))^2/((sum(abs(deltaI).^2))*(sum(abs(deltaV).^2)));
-  //
-  //	end
-  //
-  //	Zs2_k = Zsh2(k) %display
-  //	C_k = C(k) %display
+	return weight * sample + (1.0f - weight) * avg;
+}
+
+static _Bool detectLoadChangesCount(float32_t *signal, uint32_t signal_len, uint32_t **lcd,
+		uint32_t *lcd_count, float32_t threshold )
+{
+	float32_t fastAvg;
+	float32_t slowAvg;
+	float32_t prevDifference = 0;
+
+	(*lcd_count) = 1;
+	(*lcd) = malloc( (*lcd_count) * sizeof(uint32_t) );
+	if( !(*lcd) )
+		return false;
+	(*lcd)[0] = 0;
+
+	arm_cmplx_mag_f32( &signal[0], &fastAvg, 1 );
+	arm_cmplx_mag_f32( &signal[0], &slowAvg, 1 );
+
+	for( uint32_t idx = 0; idx < 2 * signal_len; idx += 2 )
+	{
+		float32_t sig_abs;
+		arm_cmplx_mag_f32( &signal[idx], &sig_abs, 1 );
+
+		fastAvg = expAvg( sig_abs, fastAvg, 0.5 );
+		slowAvg = expAvg( sig_abs, slowAvg, 0.125 );
+
+		float32_t difference = fastAvg - slowAvg;
+		arm_abs_f32( &difference, &difference, 1 );
+
+		_Bool isEdge = ((prevDifference < threshold) && (difference >= threshold));
+		if( isEdge )
+		{
+			(*lcd_count)++;
+			(*lcd) = realloc( (*lcd), (*lcd_count) * sizeof(uint32_t) );
+			if( !(*lcd) )
+				return false;
+			(*lcd)[(*lcd_count) - 1] = idx;
+		}
+		prevDifference = difference;
+	}
+
+	(*lcd_count)++;
+	(*lcd) = realloc( (*lcd), (*lcd_count) * sizeof(uint32_t) );
+	if( !(*lcd) )
+		return false;
+	(*lcd)[(*lcd_count) - 1] = 2 * signal_len - 1;
+
+	return true;
+}
+
+static void arm_cmplx_mean_f32(float32_t *pSrc, float32_t *pDst, uint32_t numSamples)
+{
+	pDst[0] = pDst[1] = 0.0f;
+
+	for(uint32_t idx = 0; idx < numSamples; idx++)
+	{
+		pDst[0] += pSrc[2 * idx];
+		pDst[1] += pSrc[2 * idx + 1];
+	}
+
+	pDst[0] /= (float32_t)numSamples;
+	pDst[1] /= (float32_t)numSamples;
+}
+
+static _Bool avgIntervals( float32_t *signal, uint32_t *lcd_idx, uint32_t lcd_idx_len,
+		float32_t **avg_intervals )
+{
+	(*avg_intervals) = malloc(2 * (lcd_idx_len - 1) * sizeof(float32_t));
+	if ( !(*avg_intervals) )
+		return false;
+
+	for( uint32_t idx = 0; idx < lcd_idx_len - 1; idx++ )
+	{
+		uint32_t interval_len = (lcd_idx[idx + 1] - lcd_idx[idx]) / 2;
+		uint32_t interval_margin = 2 * (interval_len / 20);
+		arm_cmplx_mean_f32( &signal[lcd_idx[idx] + interval_margin], &(*avg_intervals)[2 * idx],
+				interval_len - interval_margin );
+	}
+
+	return true;
+
+}
+
+static _Bool calcDeltas( float32_t *avg_intervals, uint32_t avg_intervals_len, float32_t **deltas )
+{
+	(*deltas) = malloc( 2 * (avg_intervals_len - 1) * sizeof(float32_t) );
+	if( !(*deltas) )
+		return false;
+
+	for( uint32_t idx = 0; idx < avg_intervals_len - 1; idx++ )
+	{
+		float32_t phase_diff = -atan2f( avg_intervals[(2 * idx) + 1] - avg_intervals[2 * idx],
+				avg_intervals[(2 * idx + 1) + 1] - avg_intervals[2 * idx + 1] );
+
+		float32_t e[2] = {arm_cos_f32(phase_diff), -arm_sin_f32(phase_diff)};
+
+		arm_cmplx_mult_cmplx_f32(e, &avg_intervals[(2 * idx) + 1], &(*deltas)[2 * idx], 1);
+	}
+
+	return true;
+
+}
+
+void DSP_CalcSourceImpedance(void)
+{
+	struct datareader_t *dr = DR_GetInstance();
+
+	// 1. Detect load changes (including beginning and end of signal)
+	uint32_t *lcd_idx_array;
+	uint32_t lcd_count;
+	if(!detectLoadChangesCount(dr->FFT_I, dr->lines_nr, &lcd_idx_array, &lcd_count, 1.0))
+	{
+		asm volatile ("BKPT 0");
+		free(lcd_idx_array);
+	}
+
+	// 2. Average detected intervals of signal
+	float32_t *avg_intervals_U;
+	if(!avgIntervals(dr->FFT_U, lcd_idx_array, lcd_count, &avg_intervals_U))
+	{
+		asm volatile ("BKPT 0");
+		free(avg_intervals_U);
+	}
+
+	float32_t *avg_intervals_I;
+	if(!avgIntervals(dr->FFT_I, lcd_idx_array, lcd_count, &avg_intervals_I))
+	{
+		asm volatile ("BKPT 0");
+		free(avg_intervals_I);
+	}
+
+	// 3. Calculate differences (deltas) between averaged intervals
+	float32_t *delta_U;
+	if(!calcDeltas(avg_intervals_U, lcd_count - 1, &delta_U))
+	{
+		asm volatile ("BKPT 0");
+		free(delta_U);
+	}
+
+	float32_t *delta_I;
+	if(!calcDeltas(avg_intervals_I, lcd_count - 1, &delta_I))
+	{
+		asm volatile ("BKPT 0");
+		free(delta_I);
+	}
+
+	// 4. Calculate source impedance
+
+	// 5. Calculate reliability index
+
+    grid.src_impedance[0] = 0.14f;	// example value
 }

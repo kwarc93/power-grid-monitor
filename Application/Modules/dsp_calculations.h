@@ -116,7 +116,7 @@ struct parameters_t
   float32_t frequency;
   float32_t RMS_voltage,RMS_current;
   float32_t load_impedance[2];		// complex number [real, imag]
-  float32_t grid_impedance;
+  float32_t src_impedance[2];		// complex number [real, imag]
   float32_t THD_voltage,THD_current;
   float32_t S,P,Q;
   float32_t PF, DPF;
@@ -151,7 +151,7 @@ void DSP_CalcPower(void);
 void DSP_CalcPF(void);
 void DSP_CalcHarmonicImpedance(void);
 void DSP_AverageValues(uint8_t avg_number);
-void DSP_CalcGridImpedance(void);
+void DSP_CalcSourceImpedance(void);
 
 
 

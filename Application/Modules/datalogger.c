@@ -339,6 +339,11 @@ void DR_Init(void)
   DR.lines_nr = 0;
 }
 
+struct datareader_t *DR_GetInstance(void)
+{
+	return &DR;
+}
+
 void DR_GetNumberOfLines(FIL *file, uint32_t *lines_count)
 {
   char c;
