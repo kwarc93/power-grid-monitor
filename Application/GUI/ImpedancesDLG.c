@@ -30,7 +30,7 @@
  **********************************************************************
  */
 #define ID_WINDOW_0    (GUI_ID_USER + 0x00)
-#define ID_GRAPH_0    (GUI_ID_USER + 0x01)
+#define ID_BUTTON_1    (GUI_ID_USER + 0x01)
 #define ID_BUTTON_0    (GUI_ID_USER + 0x02)
 #define ID_TEXT_0    (GUI_ID_USER + 0x03)
 #define ID_TEXT_1    (GUI_ID_USER + 0x04)
@@ -39,9 +39,11 @@
 #define ID_TEXT_4    (GUI_ID_USER + 0x07)
 #define ID_DROPDOWN_0    (GUI_ID_USER + 0x08)
 #define ID_TEXT_5    (GUI_ID_USER + 0x09)
+#define ID_TEXT_6    (GUI_ID_USER + 0x0A)
 
 
 // USER START (Optionally insert additional defines)
+extern osSemaphoreId DR_Semaphore;
 // USER END
 
 /*********************************************************************
@@ -60,15 +62,17 @@
  */
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
     { WINDOW_CreateIndirect, "Impedances", ID_WINDOW_0, 0, 0, 222, 270, 0, 0x0, 0 },
-    { GRAPH_CreateIndirect, "Graph", ID_GRAPH_0, 12, 75, 200, 132, 0, 0x0, 0 },
-    { BUTTON_CreateIndirect, "Choose file", ID_BUTTON_0, 130, 18, 80, 24, 0, 0x0, 0 },
-    { TEXT_CreateIndirect, "Text1", ID_TEXT_0, 14, 13, 80, 20, 0, 0x64, 0 },
-    { TEXT_CreateIndirect, "Text4", ID_TEXT_1, 14, 217, 52, 17, 0, 0x64, 0 },
-    { TEXT_CreateIndirect, "Text6", ID_TEXT_2, 114, 234, 99, 20, 0, 0x64, 0 },
-    { TEXT_CreateIndirect, "Text3", ID_TEXT_3, 14, 58, 178, 17, 0, 0x64, 0 },
-    { TEXT_CreateIndirect, "Text2", ID_TEXT_4, 14, 33, 100, 20, 0, 0x64, 0 },
-    { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_0, 14, 234, 80, 21, 0, 0x0, 0 },
-    { TEXT_CreateIndirect, "Text5", ID_TEXT_5, 114, 217, 80, 20, 0, 0x64, 0 },
+//    { GRAPH_CreateIndirect, "Graph", ID_GRAPH_0, 12, 75, 200, 132, 0, 0x0, 0 },
+    { BUTTON_CreateIndirect, "Open file", ID_BUTTON_0, 130, 22, 80, 24, 0, 0x0, 0 },
+    { BUTTON_CreateIndirect, "Calculate", ID_BUTTON_1, 130, 72, 80, 24, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Text1", ID_TEXT_0, 14, 13, 84, 20, 0, 0x64, 0 },
+    { TEXT_CreateIndirect, "Text4", ID_TEXT_1, 14, 54, 52, 17, 0, 0x64, 0 },
+    { TEXT_CreateIndirect, "Text6", ID_TEXT_2, 14, 154, 210, 20, 0, 0x64, 0 },
+    { TEXT_CreateIndirect, "Text7", ID_TEXT_6, 14, 234, 210, 20, 0, 0x64, 0 },
+    { TEXT_CreateIndirect, "Text3", ID_TEXT_3, 14, 112, 178, 17, 0, 0x64, 0 },
+    { TEXT_CreateIndirect, "Text5", ID_TEXT_5, 14, 200, 80, 20, 0, 0x64, 0 },
+    { TEXT_CreateIndirect, "Text2", ID_TEXT_4, 14, 30, 100, 20, 0, 0x64, 0 },
+    { DROPDOWN_CreateIndirect, "Dropdown", ID_DROPDOWN_0, 14, 74, 80, 21, 0, 0x0, 0 },
     // USER START (Optionally insert additional widgets)
     // USER END
 };
@@ -102,33 +106,10 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       hItem = pMsg->hWin;
       WINDOW_SetBkColor(hItem, GUI_MAKE_COLOR(0x00FFFFFF));
       //
-      // Initialization of 'Graph'
-      //
-      hItem = WM_GetDialogItem(pMsg->hWin, ID_GRAPH_0);
-      GRAPH_SetBorder(hItem, 2, 2, 2, 2);
-      //
       // Initialization of 'Text1'
       //
       hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
       TEXT_SetText(hItem, "File:");
-      //
-      // Initialization of 'Text4'
-      //
-      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
-      TEXT_SetText(hItem, "Harmonic:");
-      //
-      // Initialization of 'Text6'
-      //
-      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
-      TEXT_SetFont(hItem, GUI_FONT_20B_1);
-      TEXT_SetText(hItem, "0.00 Ohm");
-      hText_ZG = hItem;
-      //
-      // Initialization of 'Text3'
-      //
-      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
-      TEXT_SetFont(hItem, GUI_FONT_13_1);
-      TEXT_SetText(hItem, "Harmonic impedance of power grid:");
       //
       // Initialization of 'Text2'
       //
@@ -137,11 +118,39 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       TEXT_SetText(hItem, "no file selected");
       hFileName = hItem;
       //
+      // Initialization of 'Text3'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
+      TEXT_SetText(hItem, "Source impedance:");
+      //
+      // Initialization of 'Text6'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
+      TEXT_SetFont(hItem, GUI_FONT_20B_1);
+      TEXT_SetText(hItem, "0.00 + 0.00i Ohm");
+      hText_ZS = hItem;
+      //
+      // Initialization of 'Text5'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_5);
+      TEXT_SetText(hItem, "Load impedance:");
+      //
+      // Initialization of 'Text7'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_6);
+      TEXT_SetFont(hItem, GUI_FONT_20B_1);
+      TEXT_SetText(hItem, "0.00 + 0.00i Ohm");
+      hText_ZL = hItem;
+      //
+      // Initialization of 'Text4'
+      //
+      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
+      TEXT_SetText(hItem, "Harmonic:");
+      //
       // Initialization of 'Dropdown'
       //
       hItem = WM_GetDialogItem(pMsg->hWin, ID_DROPDOWN_0);
       DROPDOWN_SetFont(hItem, GUI_FONT_16B_1);
-      DROPDOWN_SetUpMode(hItem,1);
       DROPDOWN_SetListHeight(hItem, 96 + 2);
       DROPDOWN_AddString(hItem, "DC");
       DROPDOWN_AddString(hItem, "50Hz");
@@ -161,13 +170,10 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       DROPDOWN_AddString(hItem, "750Hz");
       DROPDOWN_AddString(hItem, "800Hz");
       DROPDOWN_SetAutoScroll(hItem, 1);
-      DROPDOWN_SetScrollbarWidth(hItem,19);
-      DROPDOWN_SetSel(hItem,1);
-      //
-      // Initialization of 'Text5'
-      //
-      hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_5);
-      TEXT_SetText(hItem, "Impedance:");
+      DROPDOWN_SetScrollbarWidth(hItem, 20);
+      DROPDOWN_SetSel(hItem, 1);
+      Zf_idx = 1;
+      hDd_Zf = hItem;
       // USER START (Optionally insert additional code for further widget initialization)
       // USER END
       break;
@@ -175,7 +181,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       Id    = WM_GetId(pMsg->hWinSrc);
       NCode = pMsg->Data.v;
       switch(Id) {
-        case ID_BUTTON_0: // Notifications sent by 'Choose file'
+        case ID_BUTTON_0: // Notifications sent by 'Open file'
           switch(NCode) {
             case WM_NOTIFICATION_CLICKED:
               // USER START (Optionally insert code for reacting on notification message)
@@ -209,6 +215,25 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
               // USER END
           }
           break;
+          case ID_BUTTON_1: // Notifications sent by 'Calculate'
+            switch(NCode) {
+              case WM_NOTIFICATION_CLICKED:
+                // USER START (Optionally insert code for reacting on notification message)
+                // USER END
+                break;
+              case WM_NOTIFICATION_RELEASED:
+                // USER START (Optionally insert code for reacting on notification message)
+                if(USB.disk_connected)
+                {
+					/* Start calculation of impedance by releasing DR_Thread */
+					osSemaphoreRelease(DR_Semaphore);
+                }
+                // USER END
+                break;
+                // USER START (Optionally insert additional code for further notification handling)
+                // USER END
+            }
+          break;
             case ID_DROPDOWN_0: // Notifications sent by 'Dropdown'
               switch(NCode) {
                 case WM_NOTIFICATION_CLICKED:
@@ -221,6 +246,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
                   break;
                 case WM_NOTIFICATION_SEL_CHANGED:
                   // USER START (Optionally insert code for reacting on notification message)
+                  Zf_idx = (uint8_t)DROPDOWN_GetSel(hDd_Zf);
                   // USER END
                   break;
                   // USER START (Optionally insert additional code for further notification handling)

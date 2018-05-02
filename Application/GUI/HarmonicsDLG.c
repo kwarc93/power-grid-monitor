@@ -142,7 +142,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       DROPDOWN_AddString(hItem, "750Hz");
       DROPDOWN_AddString(hItem, "800Hz");
       DROPDOWN_SetAutoScroll(hItem, 1);
-      DROPDOWN_SetScrollbarWidth(hItem,19);
+      DROPDOWN_SetScrollbarWidth(hItem, 20);
       DROPDOWN_SetSel(hItem,1);
       hDd_Uf = hItem;
       //
@@ -170,7 +170,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       DROPDOWN_AddString(hItem, "750Hz");
       DROPDOWN_AddString(hItem, "800Hz");
       DROPDOWN_SetAutoScroll(hItem, 1);
-      DROPDOWN_SetScrollbarWidth(hItem,19);
+      DROPDOWN_SetScrollbarWidth(hItem, 20);
       DROPDOWN_SetSel(hItem,1);
       hDd_If = hItem;
       //

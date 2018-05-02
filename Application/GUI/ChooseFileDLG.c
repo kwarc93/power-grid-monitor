@@ -111,9 +111,6 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
               TREEVIEW_ITEM_GetText(TREEVIEW_GetSel(hTreeView), (uint8_t*)DR.filename ,sizeof(DR.filename));
               TEXT_SetText(hFileName, DR.filename);
 
-              /* Start calculation of impedance by releasing DR_Thread */
-              osSemaphoreRelease(DR_Semaphore);
-
               TREEVIEW_ITEM_Delete(hMainDir);
               GUI_EndDialog(hChooseFile,0);
               WM_EnableWindow(hMW);

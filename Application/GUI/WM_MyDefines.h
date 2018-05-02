@@ -27,11 +27,11 @@ MULTIPAGE_Handle hMpage;
 CHECKBOX_Handle hCB_FIR, hCB_LOG, hCB_WIN;
 BUTTON_Handle hB1;
 
-TEXT_Handle hText_URMS, hText_IRMS, hText_Freq, hText_PF, hText_DPF, hText_P, hText_Q, hText_S, hText_ZL;
-TEXT_Handle hText_Time, hText_Date, hText_Uf, hText_If, hText12, hTextTHD_U, hTextTHD_I, hText_ZG;
+TEXT_Handle hText_URMS, hText_IRMS, hText_Freq, hText_PF, hText_DPF, hText_P, hText_Q, hText_S, hText_Ztype;
+TEXT_Handle hText_Time, hText_Date, hText_Uf, hText_If, hText12, hTextTHD_U, hTextTHD_I, hText_ZS, hText_ZL;
 
 GRAPH_Handle hGraph0, hGraph1;
-DROPDOWN_Handle hDd1, hDd2, hDd_Uf, hDd_If;
+DROPDOWN_Handle hDd1, hDd2, hDd_Uf, hDd_If, hDd_Zf;
 
 TREEVIEW_Handle hTreeView;
 TREEVIEW_ITEM_Handle hMainDir;
@@ -45,6 +45,9 @@ GRAPH_SCALE_Handle hScale0x, hScale0yU, hScale0yI, hScale1x, hScale1yU, hScale1y
 
 /* Harmonic index in DropDown's on page 'Harmonics' */
 uint8_t Uf_idx, If_idx;
+
+/* Harmonic index in DropDown's on page 'Impedances' */
+uint8_t Zf_idx;
 
 WM_HWIN CreateMainWindow(void);
 WM_HWIN CreateWaveforms(void);

@@ -10,6 +10,8 @@
 #include <RTOS/osThreads.h>
 #include "stm32f4xx_hal.h"
 #include "main.h"
+#include "DIALOG.h"
+#include "MESSAGEBOX.h"
 
 static void TimerCallback(void const *n)
 {
@@ -143,8 +145,10 @@ void DR_Thread(void const *argument)
 
       if(fr == FR_OK)
       {
-        DR_ReadFFT(&csv_file, 1);
+    	WM_HWIN info = MESSAGEBOX_Create(" Please wait...", "Information", GUI_MESSAGEBOX_CF_MODAL);
+        DR_ReadFFT(&csv_file, Zf_idx);
         DSP_CalcSourceImpedance();
+        WM_DeleteWindow(info);
       }
 
       fr = f_close(&csv_file);
@@ -252,16 +256,16 @@ void GUI_Thread(void const *argument)
         switch(grid.load_type)
         {
           case ind_load:
-            TEXT_SetText(hText_ZL,"inductive load (-)");
+            TEXT_SetText(hText_Ztype,"inductive load (-)");
             break;
           case ind_generator:
-            TEXT_SetText(hText_ZL,"inductive load (+)");
+            TEXT_SetText(hText_Ztype,"inductive load (+)");
             break;
           case cap_generator:
-            TEXT_SetText(hText_ZL,"capacitive load (+)");
+            TEXT_SetText(hText_Ztype,"capacitive load (+)");
             break;
           case cap_load:
-            TEXT_SetText(hText_ZL,"capacitive load (-)");
+            TEXT_SetText(hText_Ztype,"capacitive load (-)");
             break;
         }
 
@@ -269,8 +273,8 @@ void GUI_Thread(void const *argument)
 
       if(page == 2)
       {
-        sprintf(string, "%.2f Ohm", grid.src_impedance[0]);
-        TEXT_SetText(hText_ZG, string);
+        sprintf(string, "%.2f %+.2fi Ohm", grid.src_impedance[0], grid.src_impedance[1]);
+        TEXT_SetText(hText_ZS, string);
       }
 
       if(page == 3 && rtc_1sTick)

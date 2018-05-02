@@ -167,7 +167,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_8);
       TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
       TEXT_SetFont(hItem, GUI_FONT_16B_1);
-      hText_ZL = hItem;
+      hText_Ztype = hItem;
       // USER START (Optionally insert additional code for further widget initialization)
       // USER END
       break;
