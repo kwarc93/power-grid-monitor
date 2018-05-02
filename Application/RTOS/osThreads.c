@@ -275,6 +275,9 @@ void GUI_Thread(void const *argument)
       {
         sprintf(string, "%.2f %+.2fi Ohm", grid.src_impedance[0], grid.src_impedance[1]);
         TEXT_SetText(hText_ZS, string);
+
+        sprintf(string, "%.2f %+.2fi Ohm", grid.load_impedance[0], grid.load_impedance[1]);
+        TEXT_SetText(hText_ZL, string);
       }
 
       if(page == 3 && rtc_1sTick)

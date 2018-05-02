@@ -331,10 +331,10 @@ void DSP_AverageValues(uint8_t avg_number)
     accum.Q += grid.Q;
     accum.PF += grid.PF;
     accum.DPF += grid.DPF;
-    accum.load_impedance[0] += grid.load_impedance[0];
-    accum.load_impedance[1] += grid.load_impedance[1];
     accum.THD_voltage += grid.THD_voltage;
     accum.THD_current += grid.THD_current;
+    accum.load_impedance[0] += grid.load_impedance[0];
+    accum.load_impedance[1] += grid.load_impedance[1];
     counter++;
   }
   else
@@ -351,14 +351,15 @@ void DSP_AverageValues(uint8_t avg_number)
     grid.DPF = accum.DPF*div;
     grid.THD_voltage = accum.THD_voltage*div;
     grid.THD_current = accum.THD_current*div;
-    grid.load_impedance[0] = accum.load_impedance[0]*div;
-    grid.load_impedance[1] = accum.load_impedance[1]*div;
+    grid.load_impedance[0] += accum.load_impedance[0]*div;
+    grid.load_impedance[1] += accum.load_impedance[1]*div;
 
     /* Indicate that averaging is done, then reset accumulators and counter */
     grid.data_averaged = true;
-    accum.S = accum.P = accum.Q = accum.PF = accum.load_impedance[0] = accum.load_impedance[1] = 0;
+    accum.S = accum.P = accum.Q = accum.PF = 0;
     accum.RMS_voltage = accum.RMS_current = accum.frequency = accum.DPF = 0;
     accum.THD_voltage = accum.THD_current = 0;
+    accum.load_impedance[0] = accum.load_impedance[1] = 0;
     counter = 0;
   }
 }
@@ -510,10 +511,7 @@ static void calcSrcImp( float32_t *delta_U, float32_t *delta_I, uint32_t delta_l
 			arm_cmplx_mag_f32( &delta_U[realIdx + 2], &abs_U1, 1 );
 			arm_cmplx_mag_f32( &delta_I[realIdx + 2], &abs_I1, 1 );
 			if( ((abs_U1 - abs_U0) * (abs_I1 - abs_I0)) > 0.0f )
-			{
-//				asm volatile ("BKPT 0");
 				continue;
-			}
 		}
 
 		float32_t conj[2];
@@ -565,8 +563,6 @@ void DSP_CalcSourceImpedance(void)
 
 	// 4. Calculate source impedance
 	calcSrcImp(delta_U, delta_I, lcd_count - 2, grid.src_impedance);
-
-	// 5. Calculate reliability index
 
 	// Free all allocated arrays
 	free(lcd_idx_array);
